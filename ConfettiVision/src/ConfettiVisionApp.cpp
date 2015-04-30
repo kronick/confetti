@@ -52,6 +52,10 @@ class ConfettiVisionApp : public AppNative {
     
     osc::Sender oscSender;
     
+    bool poppedYet = false;
+    int poppedStartThreshold = 5;
+    int poppedEndThreshold = 3;
+    
 };
 void ConfettiVisionApp::prepareSettings(Settings * settings) {
     settings->enableHighDensityDisplay( true );
@@ -70,11 +74,11 @@ void ConfettiVisionApp::setup()
     // Set up Movie
     // -------------------------------------
     //fs::path moviePath = getOpenFilePath();
-    mMoviePaths.push_back(fs::path("/Users/kronick/Documents/💾🌵/projects/google sound burst/test vids/sorted-colors.png"));
     mMoviePaths.push_back(fs::path("/Users/kronick/Documents/💾🌵/projects/google sound burst/test vids/640x480_2.mp4"));
     mMoviePaths.push_back(fs::path("/Users/kronick/Documents/💾🌵/projects/google sound burst/test vids/640x480_3.mp4"));
     mMoviePaths.push_back(fs::path("/Users/kronick/Documents/💾🌵/projects/google sound burst/test vids/640x480.mp4"));
     mMoviePaths.push_back(fs::path("/Users/kronick/Documents/💾🌵/projects/google sound burst/test vids/640x480_4.mp4"));
+    mMoviePaths.push_back(fs::path("/Users/kronick/Documents/💾🌵/projects/google sound burst/test vids/sorted-colors.png"));
 
     if (!mMoviePaths.empty()) {
         loadMovieFile(mMoviePaths[0]);
@@ -191,18 +195,52 @@ void ConfettiVisionApp::update()
             blueThread.join();
             yellowThread.join();
             
-
-            //mFrameTexture = redParticles->getDebugView();
             
-            // Figure out OSC messages to send for this particle
-            for(auto &p : blueParticles->getParticles()) {
-                sendMessagesForParticle(*p, 0);
+            int n_particles =  greenParticles->getActiveParticleCount() + redParticles->getActiveParticleCount();
+            
+            if(n_particles > poppedStartThreshold && !poppedYet) {
+                // Trigger a bang
+                osc::Message message;
+                message.setAddress("/pop");
+                message.addIntArg(0);
+                message.addFloatArg(0);
+                message.addFloatArg(4);
+                message.addFloatArg(.5);
+                oscSender.sendMessage(message);
+                osc::Message message2;
+                message2.setAddress("/pop");
+                message2.addIntArg(1);
+                message2.addFloatArg(0);
+                message2.addFloatArg(2);
+                message2.addFloatArg(-.5);
+                oscSender.sendMessage(message2);
+                poppedYet = true;
+                console() << "BANG!!" << endl;
             }
-            for(auto &p : greenParticles->getParticles()) {
-                sendMessagesForParticle(*p, 1);
+            else if(n_particles <= poppedEndThreshold && poppedYet) {
+                // Reset
+                poppedYet = false;
+                console() << "NEW BALLOON" << endl;
+            }
+
+            if(poppedYet) {
+                
+                // Figure out OSC messages to send for this particle
+                for(auto &p : blueParticles->getParticles()) {
+                    sendMessagesForParticle(*p, 0);
+                }
+                for(auto &p : greenParticles->getParticles()) {
+                    sendMessagesForParticle(*p, 1);
+                }
+                for(auto &p : redParticles->getParticles()) {
+                    sendMessagesForParticle(*p, 2);
+                }
+                for(auto &p : yellowParticles->getParticles()) {
+                    sendMessagesForParticle(*p, 3);
+                }
             }
             
-
+            
         }
     }
     
@@ -230,7 +268,7 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
             }
             
             int n_octaves = 4;
-            int v = (p.position.y / (float)mFrameSurface.getHeight()) * 5 * n_octaves + 1;
+            int v = (p.position.y / (float)mFrameSurface.getHeight()) * 5 * n_octaves + 3;
             int octave = v / 5;
             v %= 5;
             int n;
@@ -242,29 +280,32 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
                     n = 0;
                     break;
                 case 1:
-                    n = 3;
+                    n = 4;
                     break;
                 case 2:
                     n = 5;
                     break;
                 case 3:
-                    n = 7;
+                    n = 9;
                     break;
                 case 4:
                     n = 10;
                     break;
             }
-            float volume = 1 -  p.position.y / (float)mFrameSurface.getHeight();
+            //float volume = 1 -  p.position.y / (float)mFrameSurface.getHeight();
             n += 40;
             n += 12*octave;
+            float volume = p.velocity.length() + p.freshness;
+            float pan = 2*(p.position.x - mFrameSurface.getWidth()/2) / mFrameSurface.getWidth();
             message.addFloatArg(n);         // Note
-            message.addFloatArg(p.velocity.length() + p.freshness);      // Volume
+            message.addFloatArg(volume);      // Volume
+            message.addFloatArg(pan);
         }
         break;
             
         case 1:
         {
-            // Trigger some samples
+            // Trigger some glitchy samples
             //if(p.age % 4 != 0) return;
             // This is a NEW note for Max to track
             message.setAddress("/sampler");
@@ -277,16 +318,47 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
             float speed = p.position.distance(Vec2f(mFrameSurface.getWidth() / 2, mFrameSurface.getHeight()/2)) / 100.0f;
             //float speed = p.position.x / (float)mFrameSurface.getWidth() * 2;
             float length = 1- min(p.velocity.length() / 100.0f, 1.0f);
-            float volume = p.freshness;
+            float volume = 1; //p.freshness;
             //length = .1;
             
             message.addFloatArg(offset);
             message.addFloatArg(length);
             message.addFloatArg(speed);
             message.addFloatArg(volume);
-            console() << "Offset: " << offset << " Length: " << length << " Speed: " << speed << endl;
+            //console() << "Offset: " << offset << " Length: " << length << " Speed: " << speed << endl;
         }
         break;
+        case 2:
+        {
+            // Pop samples when particle hits bottom
+            if(p.hasNoteBeenSent || p.position.y < mFrameSurface.getHeight() * .9) return;
+            
+            // Only send if this particle hasn't triggered before.
+            message.setAddress("/pop");
+            //message.addIntArg(p.ID);
+            p.hasNoteBeenSent = true;
+
+
+            
+            
+            //int index = p.position.y / (float)mFrameSurface.getHeight() * 5;
+            int index = 3;
+            float pitch = 2*(p.position.x - mFrameSurface.getWidth()/2) / mFrameSurface.getWidth() * 10;
+            //float pitch = 0;
+            float pan = 2*(p.position.x - mFrameSurface.getWidth()/2) / mFrameSurface.getWidth();
+            
+            //float volume = p.velocity.length() / 3.0f + 0.1f;
+            float volume = 1.0f;
+            //length = .1;
+            
+            
+            message.addIntArg(index);
+            message.addFloatArg(pitch);
+            message.addFloatArg(volume);
+            message.addFloatArg(pan);
+        }
+        break;
+      
     }
     oscSender.sendMessage(message);
     
