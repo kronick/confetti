@@ -12,6 +12,10 @@
 #include "cinder/Cinder.h"
 #include "Particle.h"
 #include "CinderOpenCv.h"
+#include "cinder/gl/Fbo.h"
+#include "cinder/gl/GlslProg.h"
+#include "cinder/gl/Fbo.h"
+#include "cinder/gl/Texture.h"
 #include <time.h>
 
 class ParticleCollection;

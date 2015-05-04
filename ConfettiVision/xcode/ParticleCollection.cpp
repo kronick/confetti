@@ -35,16 +35,22 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
     // [ ] Also trigger events for points that disappear for ~2 frames and remove them from the list
     // [ ] Maybe point management/event triggering should happen elsewhere instead?
     
-    cv::Mat mask;
+    if(frame.rows == 0) return;
     
-    // Threshold the incoming frame
-    cv::inRange(frame,
-                cv::Scalar(this->threshold.h_min, this->threshold.l_min, this->threshold.s_min),
-                cv::Scalar(this->threshold.h_max, this->threshold.l_max, this->threshold.s_max),
-                mask);
+    vector<cv::Mat> channels;
+ 
+    cv::split(frame, channels);
+    
+    cv::Mat mask = channels[0];
+    
+//    // Threshold the incoming frame
+//    cv::inRange(frame,
+//                cv::Scalar(this->threshold.h_min, this->threshold.l_min, this->threshold.s_min),
+//                cv::Scalar(this->threshold.h_max, this->threshold.l_max, this->threshold.s_max),
+//                mask);
     
     // Optional erod & blur to make things look a bit nicer
-    cv::dilate(mask, mask, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
+//    cv::dilate(mask, mask, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9,9)));
     //cv::medianBlur(mask, mask, 5);
     
     // Find contour polygons
@@ -115,7 +121,9 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
     if(this->debugOn) {
         // Create debug view
         this->debugView = cv::Mat::zeros(480, 640, CV_8UC3);
-//        frame.copyTo(this->debugView, mask);
+        cv::rectangle(this->debugView, cv::Rect(0,0, 640,480), cv::Scalar(230,230,230), -1);
+        frame.copyTo(this->debugView, mask);
+        //frame.copyTo(this->debugView);
 //        cv::cvtColor(this->debugView, this->debugView, CV_HLS2RGB);
 
 //        for(auto &point : contour_centers) {
@@ -129,10 +137,24 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
         for(auto &p : this->particles) {
 //            cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8 * p->freshness, this->debugColor, -1);
             if(p->isActive()) {
-                cv::circle(debugView, cv::Point(p->position.x, p->position.y), .05 * p->age, this->debugColor, -1);
+                //cv::circle(debugView, cv::Point(p->position.x, p->position.y), .05 * p->age, this->debugColor, -1);
                 //cv::line(debugView, cv::Point(p->position.x, p->position.y), cv::Point(p->position.x - p->velocity.x*10, p->position.y - p->velocity.y*10), cv::Scalar(255,255,255), 1, CV_AA);
-                for(int i=0; i<p->positionHistory.size() - 1; i++) {
-                    cv::line(debugView, cv::Point(p->positionHistory[i].x, p->positionHistory[i].y), cv::Point(p->positionHistory[i+1].x, p->positionHistory[i+1].y), cv::Scalar(255,255,255), 1, CV_AA);
+                //vector<cv::Point> smoothedPath = vector<cv::Point>();
+                if(p->positionHistory.size() >= 3) {
+                    ci::BSpline2f original = ci::BSpline2f(p->positionHistory, 1, false, true);
+                    vector<cv::Point> originalPath = vector<cv::Point>();
+                    for(int i=0; i<=8; i++) {
+                        ci::Vec2f j = original.getPosition(i/8.0f);
+                        originalPath.push_back(cv::Point(j.x, j.y));
+                    }
+                //for(auto &i : p->positionHistory) {
+                //    originalPath.push_back(cv::Point(i.x, i.y));
+                //}
+                
+
+                    for(int i=0; i<originalPath.size() - 1; i++) {
+                        //cv::line(debugView, originalPath[i], originalPath[i+1], this->debugColor, 2, CV_AA);
+                    }
                 }
             }
         }
