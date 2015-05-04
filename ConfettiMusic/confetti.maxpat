@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ -1026.0, -256.0, 950.0, 796.0 ],
+		"rect" : [ 2283.0, 79.0, 950.0, 722.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -118,7 +118,7 @@
 				"box" : 				{
 					"id" : "obj-51",
 					"maxclass" : "newobj",
-					"numinlets" : 2,
+					"numinlets" : 3,
 					"numoutlets" : 0,
 					"patcher" : 					{
 						"fileversion" : 1,
@@ -130,7 +130,7 @@
 							"modernui" : 1
 						}
 ,
-						"rect" : [ 705.0, 188.0, 640.0, 480.0 ],
+						"rect" : [ 1556.0, 525.0, 640.0, 480.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -157,16 +157,30 @@
 						"tags" : "",
 						"style" : "",
 						"subpatcher_template" : "",
+						"visible" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"comment" : "",
+									"id" : "obj-3",
+									"maxclass" : "inlet",
+									"numinlets" : 0,
+									"numoutlets" : 1,
+									"outlettype" : [ "signal" ],
+									"patching_rect" : [ 281.0, 94.0, 30.0, 30.0 ],
+									"style" : ""
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"id" : "obj-24",
 									"maxclass" : "message",
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 237.0, 182.0, 332.0, 22.0 ],
+									"patching_rect" : [ 237.0, 182.0, 140.0, 22.0 ],
 									"style" : "",
-									"text" : "open \"~/Documents/dc/projects/google sound burst/out.wav\""
+									"text" : "open ~/Desktop/out.wav"
 								}
 
 							}
@@ -174,12 +188,12 @@
 								"box" : 								{
 									"id" : "obj-23",
 									"maxclass" : "newobj",
-									"numinlets" : 1,
+									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 195.0, 224.0, 61.0, 22.0 ],
+									"patching_rect" : [ 195.0, 224.0, 71.0, 22.0 ],
 									"style" : "",
-									"text" : "sfrecord~"
+									"text" : "sfrecord~ 2"
 								}
 
 							}
@@ -256,7 +270,7 @@
 									"numinlets" : 0,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 237.0, 83.0, 30.0, 30.0 ],
+									"patching_rect" : [ 219.0, 79.0, 30.0, 30.0 ],
 									"style" : ""
 								}
 
@@ -357,6 +371,15 @@
 									"disabled" : 0,
 									"hidden" : 0,
 									"source" : [ "obj-24", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-23", 1 ],
+									"disabled" : 0,
+									"hidden" : 0,
+									"source" : [ "obj-3", 0 ]
 								}
 
 							}
@@ -595,19 +618,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "float" ],
-					"patching_rect" : [ 62.0, 417.0, 80.0, 13.0 ],
-					"style" : ""
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-13",
-					"maxclass" : "meter~",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "float" ],
-					"patching_rect" : [ 424.0, 583.0, 80.0, 13.0 ],
+					"patching_rect" : [ 9.0, 338.0, 80.0, 13.0 ],
 					"style" : ""
 				}
 
@@ -645,7 +656,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 380.5, 387.0, 22.0, 140.0 ],
+					"patching_rect" : [ 375.0, 394.0, 22.0, 140.0 ],
 					"style" : ""
 				}
 
@@ -821,9 +832,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "signal" ],
-					"patching_rect" : [ 97.0, 278.0, 128.0, 22.0 ],
+					"patching_rect" : [ 97.0, 278.0, 134.0, 22.0 ],
 					"style" : "",
-					"text" : "poly~ smooth_synth 8"
+					"text" : "poly~ smooth_synth 16"
 				}
 
 			}
@@ -920,7 +931,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-13", 0 ],
+					"destination" : [ "obj-51", 2 ],
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-2", 0 ]
@@ -951,6 +962,24 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-2", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-51", 2 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-24", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-51", 1 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-24", 0 ]
 				}
 
 			}
@@ -1056,6 +1085,24 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-14", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-4", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-51", 2 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-4", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-51", 1 ],
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-4", 0 ]
@@ -1262,43 +1309,51 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-7.2::obj-4" : [ "live.gain~[6]", "live.gain~", 0 ],
-			"obj-4.4::obj-4" : [ "live.gain~[19]", "live.gain~", 0 ],
-			"obj-7.6::obj-4" : [ "live.gain~[10]", "live.gain~", 0 ],
-			"obj-4.7::obj-4" : [ "live.gain~[22]", "live.gain~", 0 ],
-			"obj-24.2::obj-4" : [ "live.gain~[29]", "live.gain~", 0 ],
-			"obj-24.4::obj-4" : [ "live.gain~[31]", "live.gain~", 0 ],
-			"obj-9::obj-55" : [ "DSP", "DSP", 0 ],
-			"obj-7.3::obj-4" : [ "live.gain~[7]", "live.gain~", 0 ],
-			"obj-4.5::obj-4" : [ "live.gain~[20]", "live.gain~", 0 ],
-			"obj-7.8::obj-4" : [ "live.gain~[12]", "live.gain~", 0 ],
-			"obj-9::obj-22" : [ "Mute", "Mute", 0 ],
+			"obj-4.3::obj-4" : [ "live.gain~[2]", "live.gain~", 0 ],
+			"obj-4.7::obj-4" : [ "live.gain~[6]", "live.gain~", 0 ],
+			"obj-4.11::obj-4" : [ "live.gain~[10]", "live.gain~", 0 ],
+			"obj-4.1::obj-4" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-7.4::obj-4" : [ "live.gain~[19]", "live.gain~", 0 ],
+			"obj-7.7::obj-4" : [ "live.gain~[22]", "live.gain~", 0 ],
 			"obj-24.6::obj-4" : [ "live.gain~[33]", "live.gain~", 0 ],
-			"obj-9::obj-52" : [ "Level", "Level", 0 ],
-			"obj-4.2::obj-4" : [ "live.gain~[17]", "live.gain~", 0 ],
-			"obj-7.4::obj-4" : [ "live.gain~[8]", "live.gain~", 0 ],
-			"obj-4.6::obj-4" : [ "live.gain~[21]", "live.gain~", 0 ],
-			"obj-7.9::obj-4" : [ "live.gain~[13]", "live.gain~", 0 ],
-			"obj-24.3::obj-4" : [ "live.gain~[30]", "live.gain~", 0 ],
-			"obj-9::obj-56" : [ "OutputChannel", "OutputChannel", 0 ],
-			"obj-24.8::obj-4" : [ "live.gain~[35]", "live.gain~", 0 ],
-			"obj-7.1::obj-4" : [ "live.gain~[5]", "live.gain~", 0 ],
-			"obj-7.12::obj-4" : [ "live.gain~[16]", "live.gain~", 0 ],
-			"obj-7.5::obj-4" : [ "live.gain~[9]", "live.gain~", 0 ],
-			"obj-7.10::obj-4" : [ "live.gain~[14]", "live.gain~", 0 ],
-			"obj-24.5::obj-4" : [ "live.gain~[32]", "live.gain~", 0 ],
-			"obj-4.3::obj-4" : [ "live.gain~[18]", "live.gain~", 0 ],
-			"obj-7.7::obj-4" : [ "live.gain~[11]", "live.gain~", 0 ],
-			"obj-4.8::obj-4" : [ "live.gain~[23]", "live.gain~", 0 ],
-			"obj-24.1::obj-4" : [ "live.gain~[28]", "live.gain~", 0 ],
-			"obj-7.11::obj-4" : [ "live.gain~[15]", "live.gain~", 0 ],
+			"obj-4.2::obj-4" : [ "live.gain~[1]", "live.gain~", 0 ],
+			"obj-4.8::obj-4" : [ "live.gain~[7]", "live.gain~", 0 ],
+			"obj-4.13::obj-4" : [ "live.gain~[12]", "live.gain~", 0 ],
+			"obj-7.2::obj-4" : [ "live.gain~[17]", "live.gain~", 0 ],
+			"obj-7.5::obj-4" : [ "live.gain~[20]", "live.gain~", 0 ],
+			"obj-7.11::obj-4" : [ "live.gain~[26]", "live.gain~", 0 ],
 			"obj-24.7::obj-4" : [ "live.gain~[34]", "live.gain~", 0 ],
-			"obj-4.1::obj-4" : [ "live.gain~", "live.gain~", 0 ]
+			"obj-4.4::obj-4" : [ "live.gain~[3]", "live.gain~", 0 ],
+			"obj-24.1::obj-4" : [ "live.gain~[28]", "live.gain~", 0 ],
+			"obj-4.9::obj-4" : [ "live.gain~[8]", "live.gain~", 0 ],
+			"obj-9::obj-55" : [ "DSP", "DSP", 0 ],
+			"obj-4.14::obj-4" : [ "live.gain~[13]", "live.gain~", 0 ],
+			"obj-7.1::obj-4" : [ "live.gain~[16]", "live.gain~", 0 ],
+			"obj-7.6::obj-4" : [ "live.gain~[21]", "live.gain~", 0 ],
+			"obj-7.9::obj-4" : [ "live.gain~[24]", "live.gain~", 0 ],
+			"obj-24.4::obj-4" : [ "live.gain~[31]", "live.gain~", 0 ],
+			"obj-24.8::obj-4" : [ "live.gain~[35]", "live.gain~", 0 ],
+			"obj-4.6::obj-4" : [ "live.gain~[5]", "live.gain~", 0 ],
+			"obj-4.10::obj-4" : [ "live.gain~[9]", "live.gain~", 0 ],
+			"obj-9::obj-22" : [ "Mute", "Mute", 0 ],
+			"obj-4.15::obj-4" : [ "live.gain~[14]", "live.gain~", 0 ],
+			"obj-7.10::obj-4" : [ "live.gain~[25]", "live.gain~", 0 ],
+			"obj-7.12::obj-4" : [ "live.gain~[27]", "live.gain~", 0 ],
+			"obj-24.5::obj-4" : [ "live.gain~[32]", "live.gain~", 0 ],
+			"obj-9::obj-52" : [ "Level", "Level", 0 ],
+			"obj-4.5::obj-4" : [ "live.gain~[4]", "live.gain~", 0 ],
+			"obj-4.12::obj-4" : [ "live.gain~[11]", "live.gain~", 0 ],
+			"obj-9::obj-56" : [ "OutputChannel", "OutputChannel", 0 ],
+			"obj-4.16::obj-4" : [ "live.gain~[15]", "live.gain~", 0 ],
+			"obj-7.3::obj-4" : [ "live.gain~[18]", "live.gain~", 0 ],
+			"obj-7.8::obj-4" : [ "live.gain~[23]", "live.gain~", 0 ],
+			"obj-24.2::obj-4" : [ "live.gain~[29]", "live.gain~", 0 ],
+			"obj-24.3::obj-4" : [ "live.gain~[30]", "live.gain~", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{
 				"name" : "smooth_synth.maxpat",
-				"bootpath" : "~/Documents/💾🌵/projects/google sound burst/software/ConfettiMusic",
+				"bootpath" : "~/Documents/projects/Maker Faire 2015/software/ConfettiMusic",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
@@ -1311,14 +1366,14 @@
 			}
 , 			{
 				"name" : "glitch_sampler.maxpat",
-				"bootpath" : "~/Documents/💾🌵/projects/google sound burst/software/ConfettiMusic",
+				"bootpath" : "~/Documents/projects/Maker Faire 2015/software/ConfettiMusic",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "percussive_sampler.maxpat",
-				"bootpath" : "~/Documents/💾🌵/projects/google sound burst/software/ConfettiMusic",
+				"bootpath" : "~/Documents/projects/Maker Faire 2015/software/ConfettiMusic",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
