@@ -57,9 +57,10 @@ void ConfettiVisionApp::setup()
     this->setupParams();
 
     
-    int OSCport = 3000;
-	this->oscSender.setup( "localhost", OSCport, true );
-    
+	this->oscSender.setup( "localhost", 3000, false );
+    this->oscListener.setup(3001);
+
+    this->oscListener.registerMessageReceived([this](const osc::Message * m) { this->messageReceived(m); });
     // Load Shaders
     try {
         this->rgb2hlsShader = gl::GlslProg::create(loadResource("passthru_vert.glsl"), loadResource("rgb2hls_frag.glsl"));
@@ -78,6 +79,54 @@ void ConfettiVisionApp::mouseDown( MouseEvent event )
 
 void ConfettiVisionApp::mouseMove( MouseEvent event ){
     this->mousePosition = Vec2f(event.getX(),event.getY());
+}
+
+void ConfettiVisionApp::messageReceived(const osc::Message *m) {
+    console() << m->getAddress() << endl;
+    int channel = m->getArgAsInt32(0);
+    int value = m->getArgAsInt32(1);
+    
+    ParticleCollectionRef colors [4] = {redParticles, greenParticles, blueParticles, yellowParticles};
+    ParticleCollectionRef colorRef = colors[currentCalibrationColor];
+    
+    switch(channel) {
+        case 58:
+        {
+            if(value < 127) break;
+            // Calibrate PREVIOUS color
+            this->currentCalibrationColor--;
+            if(this->currentCalibrationColor < 0)
+                this->currentCalibrationColor = 4 - this->currentCalibrationColor;
+            break;
+        }
+        case 59:
+        {
+            if(value < 127) break;
+            // Calibrate NEXT color
+            this->currentCalibrationColor++;
+            this->currentCalibrationColor %= 4;
+            break;
+        }
+        case 0:
+            colorRef->threshold.h_min = value*2;
+            break;
+        case 1:
+            colorRef->threshold.h_max = value*2;
+            break;
+        case 2:
+            colorRef->threshold.l_min = value*2;
+            break;
+        case 3:
+            colorRef->threshold.l_max = value*2;
+            break;
+        case 4:
+            colorRef->threshold.s_min = value*2;
+            break;
+        case 5:
+            colorRef->threshold.s_max = value*2;
+            break;
+    }
+    
 }
 
 void ConfettiVisionApp::setMode(Mode m ) {
@@ -151,7 +200,7 @@ void ConfettiVisionApp::updateVideoPlayback() {
             this->cvMovie.set(CV_CAP_PROP_POS_FRAMES, 0);
         }
         
-        if(!this->poppedYet) {
+        if(!this->poppedYet && isPlaybackPlaying) {
             this->cvMovie.set(CV_CAP_PROP_POS_FRAMES, movieCurrentFrame + 4);
         }
         
@@ -208,9 +257,10 @@ void ConfettiVisionApp::updateVideoPlayback() {
 //            yellowThread.join();
             
             
+            int largestBlob = max(max(max(blueParticles->largestParticleArea, redParticles->largestParticleArea), greenParticles->largestParticleArea), yellowParticles->largestParticleArea);
             int n_particles =  greenParticles->getActiveParticleCount() + redParticles->getActiveParticleCount();
             
-            if(n_particles > poppedStartThreshold && !poppedYet) {
+            if(largestBlob < poppedStartThreshold && !poppedYet) {
                 // Trigger a bang
                 osc::Message message;
                 message.setAddress("/pop");
@@ -229,19 +279,21 @@ void ConfettiVisionApp::updateVideoPlayback() {
                 poppedYet = true;
                 console() << "BANG!!" << endl;
             }
-            else if(n_particles <= poppedEndThreshold && poppedYet) {
+            else if(largestBlob > poppedEndThreshold && poppedYet) {
                 // Reset
                 poppedYet = false;
                 console() << "NEW BALLOON" << endl;
             }
             
+            
+            
             if(poppedYet) {
-                int particle_limit = 50;
+                int particle_limit = 20;
                 int n_particles = 0;
                 // Figure out OSC messages to send for this particle
                 for(auto &p : blueParticles->getParticles()) {
                     if(n_particles++ < particle_limit)
-                        sendMessagesForParticle(*p, 0);
+                        sendMessagesForParticle(*p, 3);
                 }
                 n_particles = 0;
                 for(auto &p : greenParticles->getParticles()) {
@@ -256,7 +308,7 @@ void ConfettiVisionApp::updateVideoPlayback() {
                 n_particles = 0;
                 for(auto &p : yellowParticles->getParticles()) {
                     if(n_particles++ < particle_limit)
-                        sendMessagesForParticle(*p, 3);
+                        sendMessagesForParticle(*p, 0);
                 }
             }
             
@@ -285,8 +337,8 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
                 p.hasNoteBeenSent = true;
             }
             
-            int n_octaves = 4;
-            int v = (p.position.y / (float)mFrameSurface.getHeight()) * 5 * n_octaves + 3;
+            int n_octaves = 2;
+            int v = (p.position.y / (float)this->videoHeight) * 5 * n_octaves + 3;
             int octave = v / 5;
             v %= 5;
             int n;
@@ -298,23 +350,23 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
                     n = 0;
                     break;
                 case 1:
-                    n = 4;
+                    n = 3;
                     break;
                 case 2:
                     n = 5;
                     break;
                 case 3:
-                    n = 9;
+                    n = 7;
                     break;
                 case 4:
                     n = 10;
                     break;
             }
-            //float volume = 1 -  p.position.y / (float)mFrameSurface.getHeight();
+            //float volume = 1 -  p.position.y / (float)this->videoHeight;
             n += 40;
             n += 12*octave;
             float volume = p.velocity.length() + p.freshness;
-            float pan = 2*(p.position.x - mFrameSurface.getWidth()/2) / mFrameSurface.getWidth();
+            float pan = 2*(p.position.x - this->videoWidth/2) / this->videoWidth;
             message.addFloatArg(n);         // Note
             message.addFloatArg(volume);      // Volume
             message.addFloatArg(pan);
@@ -324,18 +376,19 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
         case 1:
         {
             // Trigger some glitchy samples
-            //if(p.age % 4 != 0) return;
+            if(p.hasNoteBeenSent && p.age % 3 != 0) return;
             // This is a NEW note for Max to track
             message.setAddress("/sampler");
             message.addIntArg(p.ID);
             p.hasNoteBeenSent = true;
             
             
-            float offset = p.position.y / (float)mFrameSurface.getHeight();
-            //float speed = (p.position.x - (float)mFrameSurface.getWidth()/2) / mFrameSurface.getWidth() * 10;
-            float speed = p.position.distance(Vec2f(mFrameSurface.getWidth() / 2, mFrameSurface.getHeight()/2)) / 100.0f;
-            //float speed = p.position.x / (float)mFrameSurface.getWidth() * 2;
-            float length = 1- min(p.velocity.length() / 100.0f, 1.0f);
+            float offset = p.position.y / (float)this->videoHeight;
+            //float speed = (p.position.x - (float)this->videoWidth/2) / this->videoWidth * 10;
+            float speed = p.position.distance(Vec2f(this->videoWidth / 2, this->videoHeight/2)) / 100.0f;
+            //float speed = p.position.x / (float)this->videoWidth * 2;
+            float length = 1- min(p.velocity.length() / 10.0f, 1.0f);
+            length = speed;
             float volume = 1; //p.freshness;
             //length = .1;
             
@@ -349,7 +402,7 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
         case 2:
         {
             // Pop samples when particle hits bottom
-            if(p.hasNoteBeenSent || p.position.y < mFrameSurface.getHeight() * .9) return;
+            if(p.hasNoteBeenSent || p.position.y < this->videoHeight * .9 || p.getVelocityHistory()[0].y > this->videoHeight) return;
             
             // Only send if this particle hasn't triggered before.
             message.setAddress("/pop");
@@ -359,11 +412,11 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
 
             
             
-            //int index = p.position.y / (float)mFrameSurface.getHeight() * 5;
+            //int index = p.position.y / (float)this->videoHeight * 5;
             int index = 3;
-            float pitch = 2*(p.position.x - mFrameSurface.getWidth()/2) / mFrameSurface.getWidth() * 10;
+            float pitch = 2*(p.position.x - this->videoWidth/2) / this->videoWidth * 10;
             //float pitch = 0;
-            float pan = 2*(p.position.x - mFrameSurface.getWidth()/2) / mFrameSurface.getWidth();
+            float pan = 2*(p.position.x - this->videoWidth/2) / this->videoWidth;
             
             //float volume = p.velocity.length() / 3.0f + 0.1f;
             float volume = 1.0f;
@@ -376,6 +429,54 @@ void ConfettiVisionApp::sendMessagesForParticle(Particle &p, int channel) {
             message.addFloatArg(pan);
         }
         break;
+            
+        case 3:
+        {
+            // Trigger the BASS synth when these particles hit the bottom
+            if(p.hasNoteBeenSent || p.position.y < this->videoHeight * .9) return;
+            
+            message.setAddress("/bass");
+            message.addIntArg(p.ID);
+            p.hasNoteBeenSent = true;
+            
+            
+            int n_octaves = 1;
+            int v = ((p.position.x / (float)this->videoWidth)) * 5 * n_octaves;
+            int octave = v / 5;
+            v %= 5;
+            int n;
+            switch(v) {
+                    // Major pentatonic: 0, 3, 5, 7, 10
+                    // 0, 4, 5, 9, 10
+                    // 0, 4, 7, 10, 12
+                case 0:
+                    n = 0;
+                    break;
+                case 1:
+                    n = 3;
+                    break;
+                case 2:
+                    n = 5;
+                    break;
+                case 3:
+                    n = 7;
+                    break;
+                case 4:
+                    n = 10;
+                    break;
+            }
+            //float volume = 1 -  p.position.y / (float)this->videoHeight;
+            n += 40;
+            n += 12*octave;
+            float volume = p.velocity.length() * 2;
+            if(volume > 2) volume = 2;
+            if(volume < 1) volume = 1;
+            float pan = 2*(p.position.x - this->videoWidth/2) / this->videoWidth;
+            message.addFloatArg(n);         // Note
+            message.addFloatArg(volume);      // Volume
+            message.addFloatArg(pan);
+        }
+            break;
       
     }
     oscSender.sendMessage(message);
@@ -389,9 +490,10 @@ gl::Texture ConfettiVisionApp::processFrame(ci::gl::Texture& frame, ParticleColl
     gl::pushMatrices();
     frame.enableAndBind();
     this->rgb2hlsShader->bind();
+    
     this->rgb2hlsShader->uniform("tex0", 0);
-    this->rgb2hlsShader->uniform("thresholdMin", Vec3f(particleCollection->threshold.h_min/180.0f, particleCollection->threshold.l_min/255.0f, particleCollection->threshold.s_min/255.0f));
-    this->rgb2hlsShader->uniform("thresholdMax", Vec3f(particleCollection->threshold.h_max/180.0f, particleCollection->threshold.l_max/255.0f, particleCollection->threshold.s_max/255.0f));
+    this->rgb2hlsShader->uniform("thresholdMin", Vec3f(particleCollection->threshold.h_min/255.0f, particleCollection->threshold.l_min/255.0f, particleCollection->threshold.s_min/255.0f));
+    this->rgb2hlsShader->uniform("thresholdMax", Vec3f(particleCollection->threshold.h_max/255.0f, particleCollection->threshold.l_max/255.0f, particleCollection->threshold.s_max/255.0f));
     gl::clear(Color(0,0,0));
     gl::setViewport( this->hlsFramebuffer.getBounds() );
 //    gl::setViewport(this->hlsFramebuffer.getBounds());

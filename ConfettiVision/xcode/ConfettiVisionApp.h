@@ -17,6 +17,7 @@
 #include "cinder/qtime/QuickTime.h"
 #include "CinderOpenCv.h"
 #include "OscSender.h"
+#include "OscListener.h"
 #include "cinder/params/Params.h"
 #include "cinder/System.h"
 #include "CinderConfig.h"
@@ -38,6 +39,9 @@ public:
     void mouseDown( ci::app::MouseEvent event );
     void mouseMove(ci::app::MouseEvent event);
     void keyDown( ci::app::KeyEvent event );
+    
+    void messageReceived(const ci::osc::Message *m);
+    
     void update();
     void updateVideoPlayback();
 
@@ -82,12 +86,14 @@ public:
     ParticleCollectionRef redParticles, greenParticles, blueParticles, yellowParticles;
     
     ci::osc::Sender oscSender;
+    ci::osc::Listener oscListener;
+    int currentCalibrationColor = 0;
     
     CameraCapture camera;
     
     bool poppedYet = false;
-    int poppedStartThreshold = 5;
-    int poppedEndThreshold = 3;
+    int poppedStartThreshold = 3000;
+    int poppedEndThreshold = 7000;
     
     float paramExposure;
     float paramGain;
@@ -99,6 +105,9 @@ public:
     bool paramHDR = false;
     int paramHDRExposure = 60;
     int paramHDRKneepoint = 40;
+    
+    int videoWidth = 640;
+    int videoHeight = 480;
     
     bool isPlaybackPlaying = false;
     int playbackSpeed = 1;

@@ -29,6 +29,8 @@ class Particle {
     Particle(float x, float y);
     Particle(const ci::Vec2f &position);
     
+    std::deque<ci::Vec2f> getVelocityHistory() { return this->velocityHistory; }
+    
     void init();
     void update();
     bool isAlive() { return freshness > 0; }

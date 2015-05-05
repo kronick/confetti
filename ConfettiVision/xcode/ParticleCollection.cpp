@@ -50,7 +50,7 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
 //                mask);
     
     // Optional erod & blur to make things look a bit nicer
-//    cv::dilate(mask, mask, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9,9)));
+    cv::dilate(mask, mask, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
     //cv::medianBlur(mask, mask, 5);
     
     // Find contour polygons
@@ -59,8 +59,10 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
     cv::findContours(mask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     
     // Delete the ones that are too big or small
+    this->largestParticleArea = 0;
     for(auto contour = contours.begin(); contour != contours.end();) {
         double area = cv::contourArea(*contour);
+        this->largestParticleArea = max(this->largestParticleArea, (int)area);
         if(area > particleAreaMax || area < particleAreaMin) {
             contour = contours.erase(contour);
         }
@@ -107,7 +109,8 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
             }
         }
         
-        if(!match_found) {
+        // Add new particle if it's not in the junk zone
+        if(!match_found && found_point.y > this->deadZoneTop) {
             // Create a new particle
             ParticleRef p = Particle::create(found_vec);
             this->particles.push_back(p);
@@ -136,8 +139,11 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
 
         for(auto &p : this->particles) {
 //            cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8 * p->freshness, this->debugColor, -1);
+            if(p->freshness == 1)
+                cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, 1);
             if(p->isActive()) {
                 //cv::circle(debugView, cv::Point(p->position.x, p->position.y), .05 * p->age, this->debugColor, -1);
+                //cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, -1);
                 //cv::line(debugView, cv::Point(p->position.x, p->position.y), cv::Point(p->position.x - p->velocity.x*10, p->position.y - p->velocity.y*10), cv::Scalar(255,255,255), 1, CV_AA);
                 //vector<cv::Point> smoothedPath = vector<cv::Point>();
                 if(p->positionHistory.size() >= 3) {

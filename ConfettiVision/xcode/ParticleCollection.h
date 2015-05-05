@@ -59,9 +59,12 @@ class ParticleCollection {
   public:
     ColorThreshold          threshold;
     std::string             name;
-    int                     particleAreaMin = 5;
-    int                     particleAreaMax = 800;
+    int                     particleAreaMin = 20;
+    int                     particleAreaMax = 1200;
     float                   particleSeparationThreshold = 1000;
+    int                     largestParticleArea;
+    
+    int                   deadZoneTop = 48;
     
     std::vector<ParticleRef>   movedParticles;
     std::vector<ParticleRef>   newParticles;

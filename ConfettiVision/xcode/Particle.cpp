@@ -47,7 +47,8 @@ void Particle::update() {
             v_avg += v;
         }
         this->velocity = v_avg / this->velocityHistory.size();
-        this->position += velocity * freshness;
+        //this->position += velocity * freshness;
+        this->position += velocity;
         this->positionHistory.push_back(ci::Vec2f(this->position));
     }
 }
