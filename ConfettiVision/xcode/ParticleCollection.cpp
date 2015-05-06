@@ -11,8 +11,8 @@ using namespace std;
 
 
 
-ParticleCollection::ParticleCollection(const char * name) {
-    this->name = string(name);
+ParticleCollection::ParticleCollection(ParticleColor color) {
+    this->color = color;
     this->particles = vector<ParticleRef>();
     
     // Choose a random debug color
@@ -23,6 +23,13 @@ ParticleCollection::ParticleCollection(const char * name) {
 
 void ParticleCollection::setDebugColor(int r, int g, int b) {
     this->debugColor = cv::Scalar(r, g, b);
+}
+
+void ParticleCollection::resetParticles() {
+    this->particles.clear();
+    this->newParticles.clear();
+    this->movedParticles.clear();
+    this->largestParticleArea = 0;
 }
 
 void ParticleCollection::findParticles(const cv::Mat &frame) {
@@ -112,7 +119,7 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
         // Add new particle if it's not in the junk zone
         if(!match_found && found_point.y > this->deadZoneTop) {
             // Create a new particle
-            ParticleRef p = Particle::create(found_vec);
+            ParticleRef p = Particle::create(found_vec, this->color);
             this->particles.push_back(p);
             this->newParticles.push_back(p);
             
@@ -139,18 +146,20 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
 
         for(auto &p : this->particles) {
 //            cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8 * p->freshness, this->debugColor, -1);
-            if(p->freshness == 1)
-                cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, 1);
+//            if(p->freshness == 1)
+//                cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, 1);
             if(p->isActive()) {
                 //cv::circle(debugView, cv::Point(p->position.x, p->position.y), .05 * p->age, this->debugColor, -1);
-                //cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, -1);
+                cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, -1);
                 //cv::line(debugView, cv::Point(p->position.x, p->position.y), cv::Point(p->position.x - p->velocity.x*10, p->position.y - p->velocity.y*10), cv::Scalar(255,255,255), 1, CV_AA);
                 //vector<cv::Point> smoothedPath = vector<cv::Point>();
                 if(p->positionHistory.size() >= 3) {
-                    ci::BSpline2f original = ci::BSpline2f(p->positionHistory, 1, false, true);
+                    ci::BSpline2f original = ci::BSpline2f(p->positionHistory, 2, false, true);
                     vector<cv::Point> originalPath = vector<cv::Point>();
-                    for(int i=0; i<=8; i++) {
-                        ci::Vec2f j = original.getPosition(i/8.0f);
+                    int nSegments = 64;
+                    float tail = 2.0f;
+                    for(int i=0; i<=nSegments; i++) {
+                        ci::Vec2f j = original.getPosition(1-(1/tail) + i/(nSegments * tail));
                         originalPath.push_back(cv::Point(j.x, j.y));
                     }
                 //for(auto &i : p->positionHistory) {
@@ -159,7 +168,7 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
                 
 
                     for(int i=0; i<originalPath.size() - 1; i++) {
-                        //cv::line(debugView, originalPath[i], originalPath[i+1], this->debugColor, 2, CV_AA);
+                        cv::line(debugView, originalPath[i], originalPath[i+1], this->debugColor, 2, CV_AA);
                     }
                 }
             }

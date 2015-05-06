@@ -33,12 +33,14 @@ struct ColorThreshold {
 class ParticleCollection {
   public:
     // Smart Pointer Constructors
-    static ParticleCollectionRef create(const char * name) { return std::make_shared<ParticleCollection>(name); }
+    static ParticleCollectionRef create(ParticleColor color) { return std::make_shared<ParticleCollection>(color); }
     
   public:
     // Constructors
     ParticleCollection() {}
-    ParticleCollection(const char * name);
+    ParticleCollection(ParticleColor color);
+    
+    void resetParticles();
     
     void findParticles(const cv::Mat& frame);
     int getParticleCount() { return this->particles.size(); }
@@ -58,7 +60,7 @@ class ParticleCollection {
     
   public:
     ColorThreshold          threshold;
-    std::string             name;
+    ParticleColor           color;
     int                     particleAreaMin = 20;
     int                     particleAreaMax = 1200;
     float                   particleSeparationThreshold = 1000;

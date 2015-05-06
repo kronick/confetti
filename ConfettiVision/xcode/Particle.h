@@ -15,19 +15,21 @@
 class Particle;
 typedef std::shared_ptr<Particle> ParticleRef;
 
+enum class ParticleColor { RED, BLUE, GREEN, YELLOW };
+
 class Particle {
    
   public:
     // Smart pointer constructors
     static ParticleRef create() { return std::make_shared<Particle>(); }
-    static ParticleRef create(int x, int y) { return std::make_shared<Particle>(x,y); }
-    static ParticleRef create(const ci::Vec2f &v) { return std::make_shared<Particle>(v); }
+    static ParticleRef create(int x, int y, ParticleColor c) { return std::make_shared<Particle>(x,y, c); }
+    static ParticleRef create(const ci::Vec2f &v, ParticleColor c) { return std::make_shared<Particle>(v, c); }
 
   public:
     // Constructors
     Particle();
-    Particle(float x, float y);
-    Particle(const ci::Vec2f &position);
+    Particle(float x, float y, ParticleColor c);
+    Particle(const ci::Vec2f &position, ParticleColor c);
     
     std::deque<ci::Vec2f> getVelocityHistory() { return this->velocityHistory; }
     
@@ -38,6 +40,8 @@ class Particle {
     
     void setPosition(float x, float y);
     void setPosition(const ci::Vec2f &position);
+    
+    ParticleColor getColor() { return this->color; }
     
 
   public:
@@ -51,6 +55,8 @@ class Particle {
     float decayRate = 0.05;
     
     std::vector<ci::Vec2f> positionHistory;
+    
+    ParticleColor color;
     
   private:
     static int last_particle_id;

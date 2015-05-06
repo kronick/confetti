@@ -13,14 +13,16 @@ Particle::Particle() {
     this->init();
 }
 
-Particle::Particle(float x, float y) {
+Particle::Particle(float x, float y, ParticleColor c) {
     this->init();
     this->position = ci::Vec2f(x,y);
+    this->color = c;
 }
 
-Particle::Particle(const ci::Vec2f &position) {
+Particle::Particle(const ci::Vec2f &position, ParticleColor c) {
     this->init();
     this->position = position;
+    this->color = c;
 }
 
 void Particle::init() {

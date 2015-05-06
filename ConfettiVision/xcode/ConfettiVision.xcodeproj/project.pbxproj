@@ -42,6 +42,8 @@
 		4D91BED31AF598EA0015CE83 /* passthru_vert.glsl in Resources */ = {isa = PBXBuildFile; fileRef = 4D91BED21AF598EA0015CE83 /* passthru_vert.glsl */; };
 		4D91BED51AF690690015CE83 /* hls_threshold_dilate_frag.glsl in Resources */ = {isa = PBXBuildFile; fileRef = 4D91BED41AF690690015CE83 /* hls_threshold_dilate_frag.glsl */; };
 		4D91BEDB1AF80AA30015CE83 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D91BEDA1AF80AA30015CE83 /* CoreMIDI.framework */; };
+		4D91BEDE1AF951010015CE83 /* Balloon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D91BEDC1AF951000015CE83 /* Balloon.cpp */; };
+		4D91BEE11AF955D80015CE83 /* OSCMessenger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D91BEDF1AF955D80015CE83 /* OSCMessenger.cpp */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
 		5323E6B60EAFCA7E003A9687 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B50EAFCA7E003A9687 /* QTKit.framework */; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -116,6 +118,10 @@
 		4D91BED21AF598EA0015CE83 /* passthru_vert.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = passthru_vert.glsl; sourceTree = "<group>"; };
 		4D91BED41AF690690015CE83 /* hls_threshold_dilate_frag.glsl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = hls_threshold_dilate_frag.glsl; sourceTree = "<group>"; };
 		4D91BEDA1AF80AA30015CE83 /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = System/Library/Frameworks/CoreMIDI.framework; sourceTree = SDKROOT; };
+		4D91BEDC1AF951000015CE83 /* Balloon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Balloon.cpp; sourceTree = "<group>"; };
+		4D91BEDD1AF951010015CE83 /* Balloon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Balloon.h; sourceTree = "<group>"; };
+		4D91BEDF1AF955D80015CE83 /* OSCMessenger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OSCMessenger.cpp; sourceTree = "<group>"; };
+		4D91BEE01AF955D80015CE83 /* OSCMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCMessenger.h; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		6188896B8769432BA2F602A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -169,6 +175,8 @@
 			isa = PBXGroup;
 			children = (
 				86FECB43FDBC42E9BDD1CC0A /* ConfettiVisionApp.cpp */,
+				4D91BEDC1AF951000015CE83 /* Balloon.cpp */,
+				4D91BEDD1AF951010015CE83 /* Balloon.h */,
 				4D78B9391AF3F60B007C7BC6 /* ConfettiVisionApp.h */,
 				90469FE61AF033D7008E56E4 /* ConfettiTune.cpp */,
 				90469FE71AF033D7008E56E4 /* ConfettiTune.h */,
@@ -180,6 +188,8 @@
 				904AD6631AE9B77B00A0D8A6 /* ParticleCollection.h */,
 				4D78B9361AF2ECC4007C7BC6 /* CameraCapture.cpp */,
 				4D78B9371AF2ECC4007C7BC6 /* CameraCapture.h */,
+				4D91BEDF1AF955D80015CE83 /* OSCMessenger.cpp */,
+				4D91BEE01AF955D80015CE83 /* OSCMessenger.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -467,6 +477,7 @@
 			files = (
 				4D78B91A1AF2D81B007C7BC6 /* UdpSocket.cpp in Sources */,
 				904AD6611AE9B63500A0D8A6 /* Particle.cpp in Sources */,
+				4D91BEDE1AF951010015CE83 /* Balloon.cpp in Sources */,
 				4D78B9381AF2ECC4007C7BC6 /* CameraCapture.cpp in Sources */,
 				4D78B90B1AF2D80E007C7BC6 /* OscTypes.cpp in Sources */,
 				4D78B9181AF2D81B007C7BC6 /* IpEndpointName.cpp in Sources */,
@@ -483,6 +494,7 @@
 				4D78B9291AF2D831007C7BC6 /* OscSender.cpp in Sources */,
 				90469FE81AF033D7008E56E4 /* ConfettiTune.cpp in Sources */,
 				90CBC87D1AEAD6EF009BFF96 /* Test.cpp in Sources */,
+				4D91BEE11AF955D80015CE83 /* OSCMessenger.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -22,12 +22,12 @@
 #include "cinder/System.h"
 #include "CinderConfig.h"
 
-#include "RtMidi.h"
-
 #include <thread>
 
 #include "ParticleCollection.h"
+#include "OSCMessenger.h"
 #include "CameraCapture.h"
+#include "Balloon.h"
 
 enum class Mode { CAPTURE, REVIEW, PLAYBACK };
 
@@ -43,9 +43,6 @@ public:
     void messageReceived(const ci::osc::Message *m);
     
     void update();
-    void updateVideoPlayback();
-
-    ci::gl::Texture processFrame(ci::gl::Texture& frame, ParticleCollectionRef particleCollection);
     
     void draw();
     void drawPlayback();
@@ -54,26 +51,17 @@ public:
     
     void fileDrop( ci::app::FileDropEvent event );
     void loadMovieFile( const ci::fs::path &path );
-    void resetPop();
     
     void drawDebugString(const std::string &str, const ci::Vec2f &baseline);
     void setMode(Mode m);
     
-    void sendMessagesForParticle(Particle &p, int channel);
-    
-    cv::Mat getHLSImage(ci::Surface surface);
 
 public:
     ci::gl::Texture         mFrameTexture;
     ci::gl::TextureRef      cameraPreview;
     ci::Surface             mFrameSurface;
-    ci::gl::Fbo             hlsFramebuffer;
     
-    ci::gl::GlslProgRef     rgb2hlsShader;
     
-    //qtime::MovieGlRef   mMovie;
-    //qtime::MovieSurfaceRef mMovie;
-    cv::VideoCapture    cvMovie;
     ci::Font debugFont;
     ci::gl::TextureFontRef debugTextureFont;
     
@@ -83,17 +71,13 @@ public:
     
     std::vector<ci::fs::path> mMoviePaths;
     
-    ParticleCollectionRef redParticles, greenParticles, blueParticles, yellowParticles;
-    
-    ci::osc::Sender oscSender;
     ci::osc::Listener oscListener;
     int currentCalibrationColor = 0;
     
     CameraCapture camera;
+    OSCMessenger messenger;
+    BalloonRef balloon;
     
-    bool poppedYet = false;
-    int poppedStartThreshold = 3000;
-    int poppedEndThreshold = 7000;
     
     float paramExposure;
     float paramGain;
@@ -105,12 +89,15 @@ public:
     bool paramHDR = false;
     int paramHDRExposure = 60;
     int paramHDRKneepoint = 40;
+    ColorThreshold paramThresholdR;
+    ColorThreshold paramThresholdG;
+    ColorThreshold paramThresholdB;
+    ColorThreshold paramThresholdY;
     
     int videoWidth = 640;
     int videoHeight = 480;
     
     bool isPlaybackPlaying = false;
-    int playbackSpeed = 1;
     
     Mode currentMode = Mode::PLAYBACK;
     
