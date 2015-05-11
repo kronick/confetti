@@ -40,6 +40,9 @@ class Particle {
     
     void setPosition(float x, float y);
     void setPosition(const ci::Vec2f &position);
+    void setContour(std::vector<ci::Vec2f> contour);
+    std::vector<ci::Vec2f> getContour() { return this->contour; }
+    std::deque< std::vector<ci::Vec2f> > getContourHistory() { return this->contourHistory; }
     
     ParticleColor getColor() { return this->color; }
     
@@ -47,6 +50,7 @@ class Particle {
   public:
     ci::Vec2f position;
     ci::Vec2f velocity;
+    float easing = 0.8f;
     int age = 0;
     int positionUpdates = 0;
     int ID;
@@ -55,12 +59,14 @@ class Particle {
     float decayRate = 0.05;
     
     std::vector<ci::Vec2f> positionHistory;
+    std::deque< std::vector<ci::Vec2f> > contourHistory;
     
     ParticleColor color;
     
   private:
     static int last_particle_id;
     std::deque<ci::Vec2f> velocityHistory;
+    std::vector<ci::Vec2f> contour;
     static const int velocityHistoryLength = 50;
 };
 

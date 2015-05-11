@@ -75,6 +75,6 @@ class ParticleCollection {
     std::vector<ParticleRef>   particles;
     
     cv::Mat                 debugView;
-    bool                    debugOn = true;
+    bool                    debugOn = false;
     cv::Scalar              debugColor;
 };

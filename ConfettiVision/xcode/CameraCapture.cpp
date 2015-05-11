@@ -35,15 +35,22 @@ CameraCapture::~CameraCapture() {
 }
 
 void CameraCapture::startStream(int fps) {
-    this->isCapturing = true;
+    this->preBuffer.clear();
+    this->postBuffer.clear();
+    this->capturedFrames.clear();
+    
     this->mode = CaptureMode::BUFFER;
     this->setFramerate(fps);
+    
+    this->stopStream();
     this->captureThread = std::thread(&CameraCapture::captureAsync, this);
+    this->isCapturing = true;
 }
 void CameraCapture::stopStream() {
     this->isCapturing = false;
     if(this->captureThread.joinable())
         this->captureThread.join();
+    
 }
 
 ci::gl::TextureRef CameraCapture::getPreview() {
@@ -51,6 +58,22 @@ ci::gl::TextureRef CameraCapture::getPreview() {
     if(previewImage.rows == 0) return NULL;
     ci::gl::TextureRef tex = ci::gl::Texture::create(ci::fromOcv(this->previewImage));
     return tex;
+}
+
+void CameraCapture::postTrigger() {
+    // Stop capturing and use only the frames in the prebuffer
+    this->mode = CaptureMode::REST;
+    
+    // Build a vector with all the captured frames
+    for(auto &f : this->preBuffer)
+        this->capturedFrames.push_back(f);
+    
+    this->preBuffer.clear();
+    this->postBuffer.clear();
+    this->captureStartFrame = 0;
+    this->captureEndFrame = 0;
+    
+    //this->isCapturing = false;
 }
 
 void CameraCapture::startTrigger() {
@@ -68,7 +91,7 @@ void CameraCapture::stopTrigger() {
     printf("Average FPS: %i\n\n", (int)(n_frames / capture_time.count()));
     
     
-    // Build a list with all the captured frames from pre and post buffer
+    // Build a vector with all the captured frames from pre and post buffer
     for(auto &f : this->preBuffer)
         this->capturedFrames.push_back(f);
     for(auto &f : this->postBuffer)
@@ -88,18 +111,8 @@ void CameraCapture::saveBuffer(string filename) {
     type = CV_FOURCC('j', 'p', 'e', 'g');
     outputVideo.open(filename, type, 24, cv::Size(640, 480), true);
     
-    // Add the pre-trigger frames
-    for(list<cv::Mat>::iterator frame=this->preBuffer.begin(); frame != this->preBuffer.end(); ++frame) {
-        outputVideo << *frame;
-    }
-    
-    // Add the post-trigger frames
-    for(list<cv::Mat>::iterator frame=this->postBuffer.begin(); frame != this->postBuffer.end(); ++frame) {
-        outputVideo << *frame;
-    }
-    
-    // Clear the post-buffer to free up memory
-    this->postBuffer.clear();
+    for(auto &f : this->capturedFrames)
+        outputVideo << f;
     
     this->startStream(this->framerate);
 }
@@ -233,7 +246,9 @@ void CameraCapture::setWhiteBalance(ci::Vec3f v) {
 bool CameraCapture::setFramerate(int fps) {
     if(!this->isCameraOpen) return false;
     
+    fps *= 1.05;    // Give some time for frame download
     this->framerate = fps;
+    this->prebuffer_length = this->prebuffer_seconds * fps;  // Always capture the same amount of time
     return this->setExposure(1000000.0f/fps);
     
 //    float min_fps, max_fps;

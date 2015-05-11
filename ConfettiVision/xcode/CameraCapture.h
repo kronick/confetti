@@ -29,6 +29,7 @@ class CameraCapture {
     ci::gl::TextureRef getPreview();
     void startTrigger();
     void stopTrigger();
+    void postTrigger();
     void saveBuffer(std::string filename);
     std::vector<cv::Mat> getCapturedFrames() { return this->capturedFrames; }
 
@@ -56,7 +57,9 @@ class CameraCapture {
     std::vector<cv::Mat> capturedFrames;
     
     CaptureMode mode = CaptureMode::REST;
-    int prebuffer_length = 400;
+    //int prebuffer_length = 400;
+    int prebuffer_length = 400 * 7.0f;
+    float prebuffer_seconds = 7.0f;
     
     void captureAsync();
     std::thread captureThread;

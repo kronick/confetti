@@ -11,6 +11,7 @@
 #include <memory>
 #include "cinder/Cinder.h"
 #include "cinder/gl/gl.h"
+#include "cinder/Rand.h"
 #include "cinder/Surface.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/GlslProg.h"
@@ -20,6 +21,15 @@
 #include "ParticleCollection.h"
 #include "OSCMessenger.h"
 
+#include "ColorDefinitions.h"
+
+#include "Pop.h"
+#include "BassString.h"
+#include "Waveform.h"
+#include "SynthLine.h"
+
+
+class ConfettiVisionApp;
 class Balloon;
 typedef std::shared_ptr<Balloon> BalloonRef;
 
@@ -43,17 +53,31 @@ class Balloon {
     
     void setSpeed(int speed) { this->playbackRate = speed; }
     void update();
+    void updateGraphics();
     bool isReady() { return this->loaded && !this->loading; }
+    bool hasPopped() { return this->poppedYet; }
     bool loadMovieFile(const ci::fs::path &path);
-    void useFrames(std::vector<cv::Mat> frames) { this->frames = frames; }
-
+    void setFrames(std::vector<cv::Mat> frames);
+    
+    void setDebug(bool d);
+    bool getDebug() { return this->debugMode; }
+    void drawPreviews(float width, float height);
+    void drawParticles(ParticleColor color, ci::Vec2f size);
+    
     std::vector<cv::Mat> getFrames() { return this->frames; }
     ci::gl::Texture getTexture() { return this->currentFrameTexture; }
     cv::Mat getMat() { return this->currentFrameMat; }
     ci::Surface getSurface() { return this->currentFrameSurface; }
+    int getID() { return this->ID; }
+    int getFramecount() { return this->frames.size(); }
+    int getCurrentFrameNumber() { return this->currentFrameNumber; }
+    int getCurrentSpeed() { return this->playbackRate; }
+    int getPoppedFrame() { return this->poppedFrame; }
     
     OSCMessenger* messenger;
     std::map<ParticleColor, ParticleCollectionRef> particleCollections;
+    
+    ConfettiVisionApp * parent;
     
   private:
     void setUniversalConstants();
@@ -62,7 +86,10 @@ class Balloon {
   private:
     static int  last_balloon_ID;
     
+    bool        debugMode = false;
     bool        poppedYet = false;
+    bool        seenABalloon = false;
+    int         poppedFrame = -1;
     int         poppedStartThreshold = 3000;
     int         poppedEndThreshold = 7000;
     int         largestBalloonSize = 0;
@@ -74,8 +101,10 @@ class Balloon {
     bool        paused = false;
     bool        loaded = false;
     bool        loading = false;
+    int         speed_forward = 13;
+    int         speed_rewind = -13;
     
-    int         message_per_color_limit = 30;
+    int         message_per_color_limit = 500;
     
     std::vector<cv::Mat> frames;
     cv::Mat              currentFrameMat;
@@ -89,7 +118,12 @@ class Balloon {
     
     // Musical paramaters chosen at explosion time
     std::vector<int>    chord;
-    int                 basePitch;
-    int                 giggleFileIndex;
-    int                 popFileIndex;
+    
+    // Drawables for visualization
+    float drawWidth, drawHeight;
+    std::vector<PopRef>             pops;
+    std::vector<BassStringRef>      bassStrings;
+    WaveformRef                     waveform;
+    std::map<int, SynthLineRef>     synthLines;
+
 };

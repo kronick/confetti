@@ -65,6 +65,7 @@ void Particle::setPosition(float x, float y) {
 }
 
 void Particle::setPosition(const ci::Vec2f &position) {
+    
     this->velocityHistory.push_back(position - this->position);
     if(this->velocityHistory.size() > Particle::velocityHistoryLength)
         this->velocityHistory.pop_front();
@@ -72,5 +73,13 @@ void Particle::setPosition(const ci::Vec2f &position) {
     this->position = position;
     this->freshness = 1;
     this->positionUpdates++;
+}
 
+void Particle::setContour(std::vector<ci::Vec2f> contour) {
+    this->contourHistory.push_back(contour);
+    this->contour = contour;
+    
+    if(this->contourHistory.size() > 3) {
+        this->contourHistory.pop_front();
+    }
 }

@@ -62,6 +62,7 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
     
     // Find contour polygons
     vector<vector<cv::Point> > contours;
+    vector< vector<ci::Vec2f> >contourVectors;
     vector<cv::Point> contour_centers;
     cv::findContours(mask, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
     
@@ -82,6 +83,13 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
     for(auto &contour : contours) {
         cv::Rect bounds = cv::boundingRect(contour);
         contour_centers.push_back(cv::Point(bounds.x + bounds.width/2, bounds.y + bounds.height/2));
+        
+        vector<ci::Vec2f> points;
+        for(auto &p : contour) {
+            points.push_back(ci::Vec2f(p.x, p.y));
+        }
+        
+        contourVectors.push_back(points);
     }
     
     // Run through list of particles and find correspondences
@@ -101,30 +109,41 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
     
     movedParticles = vector<ParticleRef>();
     newParticles = vector<ParticleRef>();
+
+    int i =0;
     for(auto &found_point : contour_centers) {
         ci::Vec2f found_vec(found_point.x, found_point.y);
         bool match_found = false;
+        float closestDistance = numeric_limits<float>::max();
+        ParticleRef closestParticle;
         for(auto &p : this->particles) {
-            // IF this particle hasn't already had a match since its last update
-            // AND it is within the threshold distance of the current test particle
-            // THEN update its position
-            if(p->freshness < 1 && p->position.distanceSquared(found_vec) < this->particleSeparationThreshold) {
-                p->setPosition(found_vec);
-                this->movedParticles.push_back(p);
-                match_found = true;
-                break;
+            // Find the closest particle within range that hasn't already been updated this cycle
+            if(p->freshness < 1) {
+                float distance = p->position.distanceSquared(found_vec);
+                if(distance < this->particleSeparationThreshold && distance < closestDistance) {
+                    closestDistance = distance;
+                    closestParticle = p;
+                    match_found = true;
+                }
             }
+        }
+        if(match_found) {
+            closestParticle->setPosition(found_vec);
+            closestParticle->setContour(contourVectors[i]);
+            this->movedParticles.push_back(closestParticle);
         }
         
         // Add new particle if it's not in the junk zone
         if(!match_found && found_point.y > this->deadZoneTop) {
             // Create a new particle
             ParticleRef p = Particle::create(found_vec, this->color);
+            p->setContour(contourVectors[i]);
             this->particles.push_back(p);
             this->newParticles.push_back(p);
             
         }
         
+        i++;
     }
 
     
@@ -133,48 +152,8 @@ void ParticleCollection::findParticles(const cv::Mat &frame) {
         this->debugView = cv::Mat::zeros(480, 640, CV_8UC3);
         cv::rectangle(this->debugView, cv::Rect(0,0, 640,480), cv::Scalar(230,230,230), -1);
         frame.copyTo(this->debugView, mask);
-        //frame.copyTo(this->debugView);
-//        cv::cvtColor(this->debugView, this->debugView, CV_HLS2RGB);
-
-//        for(auto &point : contour_centers) {
-//            cv::circle(debugView, point, 3, this->debugColor, -1);
-//        }
-//        
-//        for(int i = 0; i< contours.size(); i++) {
-//                cv::drawContours( debugView, contours, i, this->debugColor, 3);
-//        }
-
-        for(auto &p : this->particles) {
-//            cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8 * p->freshness, this->debugColor, -1);
-//            if(p->freshness == 1)
-//                cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, 1);
-            if(p->isActive()) {
-                //cv::circle(debugView, cv::Point(p->position.x, p->position.y), .05 * p->age, this->debugColor, -1);
-                cv::circle(debugView, cv::Point(p->position.x, p->position.y), 8, this->debugColor, -1);
-                //cv::line(debugView, cv::Point(p->position.x, p->position.y), cv::Point(p->position.x - p->velocity.x*10, p->position.y - p->velocity.y*10), cv::Scalar(255,255,255), 1, CV_AA);
-                //vector<cv::Point> smoothedPath = vector<cv::Point>();
-                if(p->positionHistory.size() >= 3) {
-                    ci::BSpline2f original = ci::BSpline2f(p->positionHistory, 2, false, true);
-                    vector<cv::Point> originalPath = vector<cv::Point>();
-                    int nSegments = 64;
-                    float tail = 2.0f;
-                    for(int i=0; i<=nSegments; i++) {
-                        ci::Vec2f j = original.getPosition(1-(1/tail) + i/(nSegments * tail));
-                        originalPath.push_back(cv::Point(j.x, j.y));
-                    }
-                //for(auto &i : p->positionHistory) {
-                //    originalPath.push_back(cv::Point(i.x, i.y));
-                //}
-                
-
-                    for(int i=0; i<originalPath.size() - 1; i++) {
-                        cv::line(debugView, originalPath[i], originalPath[i+1], this->debugColor, 2, CV_AA);
-                    }
-                }
-            }
-        }
         
-        
+        return;
     }
     
 }

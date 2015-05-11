@@ -19,30 +19,47 @@ void ConfettiVisionApp::setup()
     this->debugFont = Font("Letter Gothic Std Bold", 12);
     this->debugTextureFont = gl::TextureFont::create(Font("Avenir Black", 12*2));
     
+    textureFonts[12] = gl::TextureFont::create(Font("Avenir Black", 12*2));
+    textureFonts[16] = gl::TextureFont::create(Font("Avenir Black", 16*2));
+    textureFonts[20] = gl::TextureFont::create(Font("Avenir Black", 20*2));
+    textureFonts[24] = gl::TextureFont::create(Font("Avenir Black", 24*2));
+    textureFonts[36] = gl::TextureFont::create(Font("Avenir Black", 36*2));
+    textureFonts[48] = gl::TextureFont::create(Font("Avenir Black", 48*2));
+    
     this->configFilename = "config.xml";
     
     // Set up Movie
     // -------------------------------------
     //fs::path moviePath = getOpenFilePath();
-    mMoviePaths.push_back(fs::path(loadResource("640x480_2.mp4")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("640x480_3.mp4")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("640x480.mp4")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("640x480_4.mp4")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("sorted-colors.png")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_1.mov")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_2.mpg")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_3.mpg")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_4.mpg")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_5.mpg")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_6.mpg")->getFilePath()));
-    mMoviePaths.push_back(fs::path(loadResource("ximea_7.mpg")->getFilePath()));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_3.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_4.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_5.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_9.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_12.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_13.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_14.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_15.mov"));
+    mMoviePaths.push_back(fs::path("/Users/diskcactus1/Desktop/balloon_16.mov"));
+//    mMoviePaths.push_back(fs::path(loadResource("640x480_2.mp4")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("640x480_3.mp4")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("640x480.mp4")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("640x480_4.mp4")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("sorted-colors.png")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_1.mov")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_2.mpg")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_3.mpg")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_4.mpg")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_5.mpg")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_6.mpg")->getFilePath()));
+//    mMoviePaths.push_back(fs::path(loadResource("ximea_7.mpg")->getFilePath()));
 
-    this->messenger = OSCMessenger(3000);
-    this->oscListener.setup(3001);
-    this->oscListener.registerMessageReceived([this](const osc::Message * m) { this->messageReceived(m); });
+    this->messenger = OSCMessenger(3000, 3002);
+    this->controlListener.setup(3001);
+    //this->oscListener.registerMessageReceived([this](const osc::Message * m) { this->messageReceived(m); });
     
     this->balloon = Balloon::create();
     this->balloon->messenger = &this->messenger;
+    this->balloon->parent = this;
     
     if (!mMoviePaths.empty()) {
         this->balloon->loadMovieFile(mMoviePaths[0]);
@@ -52,11 +69,15 @@ void ConfettiVisionApp::setup()
     this->setupParams();
     
     // Set saved thresholds now that config has loaded
+    this->setThresholds();
+    
+}
+
+void ConfettiVisionApp::setThresholds() {
     this->balloon->particleCollections[ParticleColor::RED]->threshold = this->paramThresholdR;
     this->balloon->particleCollections[ParticleColor::GREEN]->threshold = this->paramThresholdG;
     this->balloon->particleCollections[ParticleColor::BLUE]->threshold = this->paramThresholdB;
     this->balloon->particleCollections[ParticleColor::YELLOW]->threshold = this->paramThresholdY;
-    
 }
 
 void ConfettiVisionApp::mouseDown( MouseEvent event )
@@ -72,13 +93,61 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
     int channel = m->getArgAsInt32(0);
     int value = m->getArgAsInt32(1);
     
-    ColorThreshold *thresholds [4] = {&(this->paramThresholdR), &(this->paramThresholdG), &(this->paramThresholdB), &(this->paramThresholdY)};
-    ParticleColor colors [4] = {ParticleColor::RED, ParticleColor::GREEN, ParticleColor::BLUE, ParticleColor::YELLOW};
+    ColorThreshold *thresholds [4] = {&(this->paramThresholdR), &(this->paramThresholdY), &(this->paramThresholdG), &(this->paramThresholdB)};
+    ParticleColor colors [4] = {ParticleColor::RED, ParticleColor::YELLOW, ParticleColor::GREEN, ParticleColor::BLUE};
     ColorThreshold *threshold = thresholds[this->currentCalibrationColor % 4];
     ParticleColor color = colors[this->currentCalibrationColor % 4];
+
+    if(value >= 127) {
+        switch(channel) {
+            case 45:    // RECORD
+            {
+                if (this->currentMode == Mode::PLAYBACK) {
+                    if(this->camera.getCapturedFrames().size() > 0)
+                        this->camera.saveBuffer("~/Desktop/balloon_" + toString(this->balloon->getID()));
+                }
+                else if(this->currentMode == Mode::CAPTURE) {
+                    this->triggerAndCreateBalloon();
+                }
+                break;
+            }
+            case 41:    // PLAY
+            {
+                if(this->currentMode == Mode::PLAYBACK)
+                    this->balloon->play();
+                break;
+            }
+            case 42:    // STOP
+            {
+                if(this->currentMode == Mode::PLAYBACK)
+                    this->balloon->pause();
+                break;
+            }
+            case 43:    // REWIND
+            {
+                if(this->currentMode == Mode::PLAYBACK)
+                    this->balloon->reset();
+                break;
+            }
+            case 46:    // SET - set balloon playback start point
+            {
+                if(this->currentMode == Mode::PLAYBACK)
+                    this->setMode(Mode::CAPTURE);
+                else if(this->currentMode == Mode::CAPTURE)
+                    this->setMode(Mode::PLAYBACK);
+            }
+        }
+    }
+    
+    if(channel == 60) { // "set" button turns on/off calibration mode
+        this->setCalibrate(value >= 127);
+    }
+    // Only set calibration if debugmode is on
+    if(!this->paramCalibrate)
+        return;
     
     switch(channel) {
-        case 58:
+        case 61:
         {
             if(value < 127) break;
             // Calibrate PREVIOUS color
@@ -87,7 +156,7 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
                 this->currentCalibrationColor = 4 - this->currentCalibrationColor;
             break;
         }
-        case 59:
+        case 62:
         {
             if(value < 127) break;
             // Calibrate NEXT color
@@ -121,6 +190,20 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
             break;
     }
     
+}
+
+void ConfettiVisionApp::setCalibrate(bool b) {
+    this->paramCalibrate = b;
+    this->balloon->setDebug(paramCalibrate);
+}
+
+void ConfettiVisionApp::triggerAndCreateBalloon() {
+    this->camera.postTrigger();
+    this->balloon = Balloon::create(this->camera.getCapturedFrames());
+    this->balloon->messenger = &this->messenger;
+    this->balloon->parent = this;
+    this->setThresholds();
+    this->setMode(Mode::PLAYBACK);
 }
 
 void ConfettiVisionApp::setMode(Mode m ) {
@@ -160,6 +243,13 @@ void ConfettiVisionApp::setMode(Mode m ) {
 
 void ConfettiVisionApp::update()
 {
+    // Handle any incoming messages
+    while(this->controlListener.hasWaitingMessages()) {
+        osc::Message m;
+        this->controlListener.getNextMessage(&m);
+        this->messageReceived(&m);
+            
+    }
     switch(this->currentMode) {
         case Mode::PLAYBACK:
         {
@@ -249,41 +339,76 @@ void ConfettiVisionApp::drawReview() {
 }
 
 void ConfettiVisionApp::drawPlayback() {
+    
 
-    
-    gl::Texture redTex = this->balloon->particleCollections[ParticleColor::RED]->getDebugView();
-    gl::Texture greenTex = this->balloon->particleCollections[ParticleColor::GREEN]->getDebugView();
-    gl::Texture blueTex = this->balloon->particleCollections[ParticleColor::BLUE]->getDebugView();
-    gl::Texture yellowTex = this->balloon->particleCollections[ParticleColor::YELLOW]->getDebugView();
-    
-    int offset_x = 220;
-    int offset_y = 20;
-    float s = 0.95f;
-    int textHeight = 12;
-    
-    if(redTex && greenTex && blueTex && yellowTex) {
-        float scale_factor = ((float)getWindowWidth()-offset_x) / redTex.getWidth() / 4.0f;
-        float w = redTex.getWidth() * scale_factor;
-        float h = redTex.getHeight() * scale_factor;
+    float topPaneHeight = getWindowHeight()*0.5;
 
-        gl::draw(redTex, Rectf(offset_x + w * 0,offset_y, offset_x + w * s + w * 0, offset_y + h * s));
-        //drawDebugString("Points:       " + to_string(redParticles->getActiveParticleCount()), Vec2f(offset_x+w*0 + w*(1-s)/2,offset_y + h*s + textHeight));
-        gl::draw(greenTex, Rectf(offset_x + w * 1,offset_y, offset_x + w * s + w * 1, offset_y + h * s));
-        //drawDebugString("Points:       " + to_string(greenParticles->getActiveParticleCount()), Vec2f(offset_x+w*1 + w*(1-s)/2,offset_y + h*s + textHeight));
-        gl::draw(blueTex, Rectf(offset_x + w * 2,offset_y, offset_x + w * s + w * 2, offset_y + h * s));
-        //drawDebugString("Points:       " + to_string(blueParticles->getActiveParticleCount()), Vec2f(offset_x+w*2 + w*(1-s)/2,offset_y + h*s + textHeight));
-        gl::draw(yellowTex, Rectf(offset_x + w * 3,offset_y, offset_x + w * s + w * 3, offset_y + h * s));
-        //drawDebugString("Points:       " + to_string(yellowParticles->getActiveParticleCount()), Vec2f(offset_x+w*3 + w*(1-s)/2,offset_y + h*s + textHeight));
-    }
+    // Draw the per-color preview channels
+    gl::pushMatrices();
+        gl::translate(0, topPaneHeight);
+        this->balloon->drawPreviews(getWindowWidth(), getWindowHeight()  - topPaneHeight);
+    gl::popMatrices();
     
+    
+    // Draw the top info pane
+    gl::color(COLOR_GREY);
+    gl::drawSolidRect(Rectf(0,0, getWindowWidth(), topPaneHeight));
+    
+    
+    gl::color(COLOR_WHITE);
     gl::Texture sourceVid = this->balloon->getTexture();
+    Vec2f videoSize(640,480);
+    if(sourceVid)
+        videoSize = Vec2f(sourceVid.getWidth(), sourceVid.getHeight());
+    //float videoPadding = 0.1 * topPaneHeight;
+    float videoPadding = 0;
+    float scale_factor = (topPaneHeight - videoPadding*2) / videoSize.y;
+    float video_w = videoSize.x * scale_factor;
+    float video_h = videoSize.y * scale_factor;
+    
+    
     if(sourceVid) {
-        float scale_factor = 600.0f / sourceVid.getWidth();
-        float w = sourceVid.getWidth() * scale_factor;
-        float h = sourceVid.getHeight() * scale_factor;
-        gl::draw(sourceVid, Rectf(getWindowWidth() / 2 - w/2, getWindowHeight()-h, getWindowWidth() / 2 + w/2, getWindowHeight()));
+        gl::draw(sourceVid, Rectf(getWindowWidth() / 2 - video_w/2, videoPadding, getWindowWidth() / 2 + video_w/2, videoPadding + video_h));
     }
- 
+    
+    
+    // Draw progress bar across top
+    float progressBarHeight = videoPadding / 2.0f;
+    gl::color(COLOR_WHITE);
+    gl::drawSolidRect(Rectf(0,0, getWindowWidth(), progressBarHeight));
+    
+    gl::color(COLOR_DARKGREY);
+    gl::drawSolidRect(Rectf(0,0, getWindowWidth() * ((float)this->balloon->getCurrentFrameNumber() / this->balloon->getFramecount()), progressBarHeight));
+    
+    if(this->balloon->getPoppedFrame() > 0) {
+        float x = this->balloon->getPoppedFrame() / (float)this->balloon->getFramecount() * getWindowWidth();
+        gl::lineWidth(2);
+        
+        gl::color(COLOR_WHITE);
+        gl::drawLine(Vec2f(x, 0), Vec2f(x, progressBarHeight*0.5));
+        
+        gl::color(COLOR_DARKGREY);
+        gl::drawLine(Vec2f(x, progressBarHeight*0.5), Vec2f(x, progressBarHeight));
+    }
+    
+    // Draw the info text
+    gl::color(COLOR_WHITE);
+    gl::pushMatrices();
+    {
+        gl::translate(videoPadding + getWindowWidth() / 2 + video_w/2, videoPadding * 2);
+        drawString("BALLOON #" + toString(this->balloon->getID()), Vec2f(0,36), 36);
+        char timecodeBuffer[255];
+        snprintf(timecodeBuffer, 255, "%4.3f", (this->balloon->getCurrentFrameNumber() / 500.0f));
+        if(this->balloon->isReady())
+            drawString(string(timecodeBuffer) + " SECONDS", Vec2f(0, 70), 20);
+        else {
+            drawString("LOADING...", Vec2f(0, 70), 20);
+        }
+        drawString("FRAME " + toString(this->balloon->getCurrentFrameNumber()) + " / " + toString(this->balloon->getFramecount()), Vec2f(0, 90), 20);
+    }
+    gl::popMatrices();
+    
+    
 }
 
 void ConfettiVisionApp::keyDown(cinder::app::KeyEvent event) {
@@ -291,13 +416,14 @@ void ConfettiVisionApp::keyDown(cinder::app::KeyEvent event) {
         setFullScreen( ! isFullScreen() );
     }
     else if(event.getChar() == 't') {
-        if(this->camera.isRecording()) {
-            this->camera.stopTrigger();
-            this->setMode(Mode::REVIEW);
-        }
-        else {
-            this->camera.startTrigger();
-        }
+//        if(this->camera.isRecording()) {
+//            this->camera.stopTrigger();
+//            this->setMode(Mode::REVIEW);
+//        }
+//        else {
+//            this->camera.startTrigger();
+//        }
+        this->triggerAndCreateBalloon();
     }
     else if(event.getChar() == 's') {
         this->camera.saveBuffer("~/Desktop/out.mpg");
@@ -321,11 +447,21 @@ void ConfettiVisionApp::drawDebugString(const std::string &str, const Vec2f &bas
     gl::color( Color( 1, 1,1 ) );
 }
 
+void ConfettiVisionApp::drawString(const std::string &str, const ci::Vec2f &baseLine, int fontSize) {
+    gl::SaveColorState s;
+    gl::TextureFontRef font = textureFonts[fontSize];
+    if(!font) return;
+    // Retina resolution!
+    gl::color( COLOR_DARKGREY );
+    font->drawString(str, baseLine, gl::TextureFont::DrawOptions().scale( 0.5f ).pixelSnap( false ));
+}
+
 
 void ConfettiVisionApp::setupParams() {
     // Set up Params control panel
     // ---------------------------------------
-   	this->params = params::InterfaceGl::create( getWindow(), "Settings", toPixels( Vec2i( 200, 650 ) ) );
+   	this->params = params::InterfaceGl::create( getWindow(), "Settings", toPixels( Vec2i( 200, 250 ) ) );
+    this->params->minimize();
     this->config = config::Config::create(this->params);
     
     params->addButton("Restart", [this]() { this->balloon->reset(); } );
@@ -345,13 +481,12 @@ void ConfettiVisionApp::setupParams() {
     params->addButton("File 7", [this]() { this->balloon->loadMovieFile(mMoviePaths[6]); } );
     params->addButton("File 8", [this]() { this->balloon->loadMovieFile(mMoviePaths[7]); } );
     params->addButton("File 9", [this]() { this->balloon->loadMovieFile(mMoviePaths[8]); } );
-    params->addButton("File 10", [this]() { this->balloon->loadMovieFile(mMoviePaths[9]); } );
-    params->addButton("File 11", [this]() { this->balloon->loadMovieFile(mMoviePaths[10]); } );
-    params->addButton("File 12", [this]() { this->balloon->loadMovieFile(mMoviePaths[11]); } );
+   
     params->addSeparator();
     params->addButton("CAPTURE", [this]() { this->setMode(Mode::CAPTURE); } );
     params->addButton("REVIEW", [this]() { this->setMode(Mode::REVIEW); } );
     params->addButton("PLAYBACK", [this]() { this->setMode(Mode::PLAYBACK); } );
+    params->addParam("Calibrate", &paramCalibrate).updateFn([this] { this->setCalibrate(paramCalibrate);  });
     params->addSeparator();
     
     config->newNode("Camera settings");
@@ -481,4 +616,4 @@ void ConfettiVisionApp::setupParams() {
         this->config->load(fs::path(this->configFilename));
 }
 
-CINDER_APP_NATIVE( ConfettiVisionApp, RendererGl( RendererGl::AA_NONE ) )
+CINDER_APP_NATIVE( ConfettiVisionApp, RendererGl( RendererGl::AA_MSAA_4 ) )

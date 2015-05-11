@@ -53,7 +53,12 @@ public:
     void loadMovieFile( const ci::fs::path &path );
     
     void drawDebugString(const std::string &str, const ci::Vec2f &baseline);
+    void drawString(const std::string &str, const ci::Vec2f &baseLine, int fontSize);
     void setMode(Mode m);
+    void setCalibrate(bool c);
+    
+    void triggerAndCreateBalloon();
+    void setThresholds();
     
 
 public:
@@ -64,6 +69,8 @@ public:
     
     ci::Font debugFont;
     ci::gl::TextureFontRef debugTextureFont;
+    std::map<int, ci::gl::TextureFontRef> textureFonts;
+
     
     ci::params::InterfaceGlRef  params;
     ci::config::ConfigRef       config;
@@ -71,14 +78,16 @@ public:
     
     std::vector<ci::fs::path> mMoviePaths;
     
-    ci::osc::Listener oscListener;
+    //ci::osc::Listener oscListener;
     int currentCalibrationColor = 0;
     
     CameraCapture camera;
     OSCMessenger messenger;
+    ci::osc::Listener controlListener;
     BalloonRef balloon;
     
     
+    bool paramCalibrate = false;
     float paramExposure;
     float paramGain;
     float paramGammaY;
@@ -102,6 +111,4 @@ public:
     Mode currentMode = Mode::PLAYBACK;
     
     ci::Vec2f mousePosition;
-
-    
 };

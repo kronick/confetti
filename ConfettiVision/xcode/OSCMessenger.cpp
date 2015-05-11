@@ -11,9 +11,14 @@
 using namespace ci;
 using namespace std;
 
-OSCMessenger::OSCMessenger(int port) {
-    this->port = port;
-    this->sender.setup("localhost", this->port, false);
+OSCMessenger::OSCMessenger(int sendPort, int listenPort) {
+    this->sendPort = sendPort;
+    this->listenPort = listenPort;
+    if(this->sendPort > 0)
+        this->sender.setup("localhost", this->sendPort, false);
+    if(this->listenPort > 0) {
+        this->listener.setup(this->listenPort);
+    }
     
     // Set default parameters
     this->videoSize = Vec2f(640, 480);
@@ -25,28 +30,35 @@ void OSCMessenger::setVideoSize(const Vec2f videoSize) {
     this->videoSize = Vec2f(videoSize.x, videoSize.y);
 }
 
-void OSCMessenger::setChord(const vector<int> chord) {
-    this->chord = chord;
+void OSCMessenger::setChord(int s) {
+    vector< vector<int> > chords;
+    chords.push_back({0, 3, 5, 7, 10});
+    chords.push_back({0, 4, 7, 10, 12});
+    chords.push_back({0, 4, 5, 9, 10});
+    
+    this->chord = chords[s%chords.size()];
+    
 }
 
 int OSCMessenger::sendMessageForBang(float scale) {
     // Trigger a bang
     osc::Message message;
-    message.setAddress("/pop");
+    message.setAddress("/bang");
     message.addIntArg(0);
     message.addFloatArg(0);
     message.addFloatArg(4);
     message.addFloatArg(.5);
     this->sender.sendMessage(message);
-    osc::Message message2;
-    message2.setAddress("/pop");
-    message2.addIntArg(1);
-    message2.addFloatArg(0);
-    message2.addFloatArg(2);
-    message2.addFloatArg(-.5);
-    this->sender.sendMessage(message2);
     
     return 2;
+}
+
+int OSCMessenger::sendSeed(int s) {
+    osc::Message message;
+    message.setAddress("/seed");
+    message.addIntArg(s);
+    this->sender.sendMessage(message);
+    return 1;
 }
 
 int OSCMessenger::sendMessagesForParticle(Particle &p) {
@@ -62,8 +74,10 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
             // Trigger the smooth synth
             if(p.hasNoteBeenSent) {
                 // This is an OLD note and Max should already know its ID
-                if(p.age % 10 != 0) return 0;
-                message.setAddress("/synth/" + to_string(p.ID));
+                //if(p.age % 10 != 0) return 0;
+                //message.setAddress("/synth/" + to_string(p.ID));
+                message.setAddress("/synthchange");
+                message.addIntArg(p.ID);
             }
             else {
                 // This is a NEW note for Max to track
@@ -72,32 +86,13 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
                 p.hasNoteBeenSent = true;
             }
             
-            int n_octaves = 2;
-            int v = (p.position.y / this->videoSize.y) * 5 * n_octaves + 3;
-            int octave = v / 5;
-            v %= 5;
-            int n;
-            switch(v) {
-                    // Major pentatonic: 0, 3, 5, 7, 10
-                    // 0, 4, 5, 9, 10
-                    // 0, 4, 7, 10, 12
-                case 0:
-                    n = 0;
-                    break;
-                case 1:
-                    n = 3;
-                    break;
-                case 2:
-                    n = 5;
-                    break;
-                case 3:
-                    n = 7;
-                    break;
-                case 4:
-                    n = 10;
-                    break;
-            }
-            //float volume = 1 -  p.position.y / (float)this->videoHeight;
+            int n_octaves = 3;
+            int v = (1-(p.position.y / this->videoSize.y)) * this->chord.size() * n_octaves + 3;
+            int octave = v / this->chord.size();
+            v %= this->chord.size();
+            int n = this->chord[v];
+
+
             n += 40;
             n += 12*octave;
             float volume = p.velocity.length() + p.freshness;
@@ -111,7 +106,8 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
         case ParticleColor::GREEN:
         {
             // Trigger some glitchy samples
-            if(p.hasNoteBeenSent && p.age % 3 != 0) return 0;
+            //if(p.hasNoteBeenSent) return 0;
+            if(p.age % 2 != 0) return 0;
             // This is a NEW note for Max to track
             message.setAddress("/sampler");
             message.addIntArg(p.ID);
@@ -123,7 +119,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
             float speed = p.position.distance(Vec2f(this->videoSize.x / 2, this->videoSize.y/2)) / 100.0f;
             //float speed = p.position.x / (float)this->videoWidth * 2;
             float length = 1- min(p.velocity.length() / 10.0f, 1.0f);
-            length = speed;
+            length = 0.1f;
             //float volume = 1; //p.freshness;
             float volume = p.velocity.length();
             if(volume > 2) volume = 2;
@@ -140,7 +136,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
         case ParticleColor::RED:
         {
             // Pop samples when particle hits bottom
-            if(p.hasNoteBeenSent || p.position.y < this->videoSize.y * .9 || p.getVelocityHistory()[0].y > this->videoSize.y) return 0;
+            if(p.hasNoteBeenSent || p.position.y < (this->videoSize.y * .9) || p.getVelocityHistory()[0].y > (this->videoSize.y * 0.9)) return 0;
             
             // Only send if this particle hasn't triggered before.
             message.setAddress("/pop");
@@ -171,7 +167,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
         case ParticleColor::YELLOW:
         {
             // Trigger the BASS synth when these particles hit the bottom
-            if(p.hasNoteBeenSent || p.position.y < this->videoSize.y * .9) return 0;
+            if(p.hasNoteBeenSent || p.age < 20 || p.position.y < this->videoSize.y * .9 ||  p.getVelocityHistory()[0].y > (this->videoSize.y * 0.9)) return 0;
             
             message.setAddress("/bass");
             message.addIntArg(p.ID);
@@ -179,31 +175,12 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
             
             
             int n_octaves = 1;
-            int v = ((p.position.x / (float)this->videoSize.x)) * 5 * n_octaves;
-            int octave = v / 5;
-            v %= 5;
-            int n;
-            switch(v) {
-                    // Major pentatonic: 0, 3, 5, 7, 10
-                    // 0, 4, 5, 9, 10
-                    // 0, 4, 7, 10, 12
-                case 0:
-                    n = 0;
-                    break;
-                case 1:
-                    n = 3;
-                    break;
-                case 2:
-                    n = 5;
-                    break;
-                case 3:
-                    n = 7;
-                    break;
-                case 4:
-                    n = 10;
-                    break;
-            }
-            //float volume = 1 -  p.position.y / (float)this->videoHeight;
+            int v = (p.position.x / this->videoSize.x) * this->chord.size() * n_octaves;
+            int octave = v / this->chord.size();
+            v %= this->chord.size();
+            int n = this->chord[v];
+            
+                        //float volume = 1 -  p.position.y / (float)this->videoHeight;
             n += 40;
             n += 12*octave;
             float volume = p.velocity.length() * 2;
@@ -213,6 +190,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
             message.addFloatArg(n);         // Note
             message.addFloatArg(volume);      // Volume
             message.addFloatArg(pan);
+            message.addIntArg(v);   // Chord index
         }
             break;
             

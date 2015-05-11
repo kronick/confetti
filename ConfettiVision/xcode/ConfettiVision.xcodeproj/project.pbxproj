@@ -12,6 +12,10 @@
 		00B784B40FF439BC000DE1D7 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B00FF439BC000DE1D7 /* AudioToolbox.framework */; };
 		00B784B50FF439BC000DE1D7 /* AudioUnit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B10FF439BC000DE1D7 /* AudioUnit.framework */; };
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
+		4D52F5281AFD728C000A395F /* Pop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F5261AFD728C000A395F /* Pop.cpp */; };
+		4D52F52B1AFD729A000A395F /* BassString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F5291AFD729A000A395F /* BassString.cpp */; };
+		4D52F52E1AFD72D3000A395F /* Waveform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F52C1AFD72D3000A395F /* Waveform.cpp */; };
+		4D52F5311AFD72E3000A395F /* SynthLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F52F1AFD72E3000A395F /* SynthLine.cpp */; };
 		4D78B9081AF2D80E007C7BC6 /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D78B8FF1AF2D80E007C7BC6 /* OscOutboundPacketStream.cpp */; };
 		4D78B9091AF2D80E007C7BC6 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D78B9021AF2D80E007C7BC6 /* OscPrintReceivedElements.cpp */; };
 		4D78B90A1AF2D80E007C7BC6 /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D78B9041AF2D80E007C7BC6 /* OscReceivedElements.cpp */; };
@@ -67,6 +71,14 @@
 		1EF1ADC18AA441CBA5B79B3F /* CinderOpenCV.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CinderOpenCV.h; path = ../blocks/OpenCV/include/CinderOpenCV.h; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		4D52F5261AFD728C000A395F /* Pop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Pop.cpp; sourceTree = "<group>"; };
+		4D52F5271AFD728C000A395F /* Pop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Pop.h; sourceTree = "<group>"; };
+		4D52F5291AFD729A000A395F /* BassString.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BassString.cpp; sourceTree = "<group>"; };
+		4D52F52A1AFD729A000A395F /* BassString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BassString.h; sourceTree = "<group>"; };
+		4D52F52C1AFD72D3000A395F /* Waveform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Waveform.cpp; sourceTree = "<group>"; };
+		4D52F52D1AFD72D3000A395F /* Waveform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Waveform.h; sourceTree = "<group>"; };
+		4D52F52F1AFD72E3000A395F /* SynthLine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SynthLine.cpp; sourceTree = "<group>"; };
+		4D52F5301AFD72E3000A395F /* SynthLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SynthLine.h; sourceTree = "<group>"; };
 		4D78B8FC1AF2D80E007C7BC6 /* MessageMappingOscPacketListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessageMappingOscPacketListener.h; path = ../../cinder_0.8.6/blocks/OSC/src/osc/MessageMappingOscPacketListener.h; sourceTree = "<group>"; };
 		4D78B8FD1AF2D80E007C7BC6 /* OscException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OscException.h; path = ../../cinder_0.8.6/blocks/OSC/src/osc/OscException.h; sourceTree = "<group>"; };
 		4D78B8FE1AF2D80E007C7BC6 /* OscHostEndianness.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OscHostEndianness.h; path = ../../cinder_0.8.6/blocks/OSC/src/osc/OscHostEndianness.h; sourceTree = "<group>"; };
@@ -122,6 +134,7 @@
 		4D91BEDD1AF951010015CE83 /* Balloon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Balloon.h; sourceTree = "<group>"; };
 		4D91BEDF1AF955D80015CE83 /* OSCMessenger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OSCMessenger.cpp; sourceTree = "<group>"; };
 		4D91BEE01AF955D80015CE83 /* OSCMessenger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OSCMessenger.h; sourceTree = "<group>"; };
+		4D91BEE51AFAD7F00015CE83 /* ColorDefinitions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorDefinitions.h; sourceTree = "<group>"; };
 		5323E6B10EAFCA74003A9687 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = /System/Library/Frameworks/CoreVideo.framework; sourceTree = "<absolute>"; };
 		5323E6B50EAFCA7E003A9687 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		6188896B8769432BA2F602A7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -174,6 +187,7 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				4D52F5251AFD7272000A395F /* Visualization */,
 				86FECB43FDBC42E9BDD1CC0A /* ConfettiVisionApp.cpp */,
 				4D91BEDC1AF951000015CE83 /* Balloon.cpp */,
 				4D91BEDD1AF951010015CE83 /* Balloon.h */,
@@ -190,6 +204,7 @@
 				4D78B9371AF2ECC4007C7BC6 /* CameraCapture.h */,
 				4D91BEDF1AF955D80015CE83 /* OSCMessenger.cpp */,
 				4D91BEE01AF955D80015CE83 /* OSCMessenger.h */,
+				4D91BEE51AFAD7F00015CE83 /* ColorDefinitions.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -282,6 +297,21 @@
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4D52F5251AFD7272000A395F /* Visualization */ = {
+			isa = PBXGroup;
+			children = (
+				4D52F5261AFD728C000A395F /* Pop.cpp */,
+				4D52F5271AFD728C000A395F /* Pop.h */,
+				4D52F5291AFD729A000A395F /* BassString.cpp */,
+				4D52F52A1AFD729A000A395F /* BassString.h */,
+				4D52F52C1AFD72D3000A395F /* Waveform.cpp */,
+				4D52F52D1AFD72D3000A395F /* Waveform.h */,
+				4D52F52F1AFD72E3000A395F /* SynthLine.cpp */,
+				4D52F5301AFD72E3000A395F /* SynthLine.h */,
+			);
+			name = Visualization;
 			sourceTree = "<group>";
 		};
 		4D78B8F01AF2D7CC007C7BC6 /* OSC */ = {
@@ -475,6 +505,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D52F5281AFD728C000A395F /* Pop.cpp in Sources */,
+				4D52F52B1AFD729A000A395F /* BassString.cpp in Sources */,
 				4D78B91A1AF2D81B007C7BC6 /* UdpSocket.cpp in Sources */,
 				904AD6611AE9B63500A0D8A6 /* Particle.cpp in Sources */,
 				4D91BEDE1AF951010015CE83 /* Balloon.cpp in Sources */,
@@ -485,6 +517,7 @@
 				4D78B93F1AF40DC2007C7BC6 /* CinderConfig.cpp in Sources */,
 				4D78B9191AF2D81B007C7BC6 /* NetworkingUtils.cpp in Sources */,
 				4D78B9261AF2D831007C7BC6 /* OscBundle.cpp in Sources */,
+				4D52F5311AFD72E3000A395F /* SynthLine.cpp in Sources */,
 				904AD6641AE9B77B00A0D8A6 /* ParticleCollection.cpp in Sources */,
 				4D78B9091AF2D80E007C7BC6 /* OscPrintReceivedElements.cpp in Sources */,
 				4D78B9081AF2D80E007C7BC6 /* OscOutboundPacketStream.cpp in Sources */,
@@ -493,6 +526,7 @@
 				4D78B9281AF2D831007C7BC6 /* OscMessage.cpp in Sources */,
 				4D78B9291AF2D831007C7BC6 /* OscSender.cpp in Sources */,
 				90469FE81AF033D7008E56E4 /* ConfettiTune.cpp in Sources */,
+				4D52F52E1AFD72D3000A395F /* Waveform.cpp in Sources */,
 				90CBC87D1AEAD6EF009BFF96 /* Test.cpp in Sources */,
 				4D91BEE11AF955D80015CE83 /* OSCMessenger.cpp in Sources */,
 			);

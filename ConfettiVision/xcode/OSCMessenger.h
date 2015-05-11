@@ -15,20 +15,25 @@
 
 class OSCMessenger {
   public:
-    OSCMessenger() { OSCMessenger(3000); }
-    OSCMessenger(int port);
+    OSCMessenger() { OSCMessenger(0,0); }
+    OSCMessenger(int sendPort, int listenPort);
     int sendMessagesForParticle(Particle &p);
     int sendMessageForBang(float scale);
+    int sendSeed(int s);
     
     void setVideoSize(const ci::Vec2f videoSize);
-    void setChord(const std::vector<int> chord);
+    void setChord(int s);
+    
+    bool hasWaitingMessages() { return this->listener.hasWaitingMessages(); }
+    ci::osc::Message getNextMessage() { ci::osc::Message m; this->listener.getNextMessage(&m); return m; }
     
   private:
-    int port;
+    int sendPort, listenPort;
     std::vector<int> chord;
     
     ci::osc::Sender sender;
     ci::osc::Listener listener;
+    ci::osc::Listener listener2;
     
     
     ci::Vec2f videoSize;
