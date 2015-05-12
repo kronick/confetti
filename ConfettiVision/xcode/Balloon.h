@@ -54,7 +54,8 @@ class Balloon {
     void setSpeed(int speed) { this->playbackRate = speed; }
     void update();
     void updateGraphics();
-    bool isReady() { return this->loaded && !this->loading; }
+    //bool isReady() { return this->loaded && !this->loading; }
+    bool isReady() { return this->loaded  || this->loading; }
     bool hasPopped() { return this->poppedYet; }
     bool loadMovieFile(const ci::fs::path &path);
     void setFrames(std::vector<cv::Mat> frames);
@@ -69,7 +70,7 @@ class Balloon {
     cv::Mat getMat() { return this->currentFrameMat; }
     ci::Surface getSurface() { return this->currentFrameSurface; }
     int getID() { return this->ID; }
-    int getFramecount() { return this->frames.size(); }
+    int getFramecount() { return this->frameCount; }
     int getCurrentFrameNumber() { return this->currentFrameNumber; }
     int getCurrentSpeed() { return this->playbackRate; }
     int getPoppedFrame() { return this->poppedFrame; }
@@ -107,6 +108,7 @@ class Balloon {
     int         message_per_color_limit = 500;
     
     std::vector<cv::Mat> frames;
+    int                  frameCount;
     cv::Mat              currentFrameMat;
     ci::Surface          currentFrameSurface;
     ci::gl::Texture      currentFrameTexture;

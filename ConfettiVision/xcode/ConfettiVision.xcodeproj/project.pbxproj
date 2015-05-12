@@ -16,6 +16,7 @@
 		4D52F52B1AFD729A000A395F /* BassString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F5291AFD729A000A395F /* BassString.cpp */; };
 		4D52F52E1AFD72D3000A395F /* Waveform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F52C1AFD72D3000A395F /* Waveform.cpp */; };
 		4D52F5311AFD72E3000A395F /* SynthLine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D52F52F1AFD72E3000A395F /* SynthLine.cpp */; };
+		4D52F5331B0174BE000A395F /* laugh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4D52F5321B0174BE000A395F /* laugh.wav */; };
 		4D78B9081AF2D80E007C7BC6 /* OscOutboundPacketStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D78B8FF1AF2D80E007C7BC6 /* OscOutboundPacketStream.cpp */; };
 		4D78B9091AF2D80E007C7BC6 /* OscPrintReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D78B9021AF2D80E007C7BC6 /* OscPrintReceivedElements.cpp */; };
 		4D78B90A1AF2D80E007C7BC6 /* OscReceivedElements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D78B9041AF2D80E007C7BC6 /* OscReceivedElements.cpp */; };
@@ -79,6 +80,7 @@
 		4D52F52D1AFD72D3000A395F /* Waveform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Waveform.h; sourceTree = "<group>"; };
 		4D52F52F1AFD72E3000A395F /* SynthLine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SynthLine.cpp; sourceTree = "<group>"; };
 		4D52F5301AFD72E3000A395F /* SynthLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SynthLine.h; sourceTree = "<group>"; };
+		4D52F5321B0174BE000A395F /* laugh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = laugh.wav; sourceTree = "<group>"; };
 		4D78B8FC1AF2D80E007C7BC6 /* MessageMappingOscPacketListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessageMappingOscPacketListener.h; path = ../../cinder_0.8.6/blocks/OSC/src/osc/MessageMappingOscPacketListener.h; sourceTree = "<group>"; };
 		4D78B8FD1AF2D80E007C7BC6 /* OscException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OscException.h; path = ../../cinder_0.8.6/blocks/OSC/src/osc/OscException.h; sourceTree = "<group>"; };
 		4D78B8FE1AF2D80E007C7BC6 /* OscHostEndianness.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OscHostEndianness.h; path = ../../cinder_0.8.6/blocks/OSC/src/osc/OscHostEndianness.h; sourceTree = "<group>"; };
@@ -269,6 +271,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4D52F5321B0174BE000A395F /* laugh.wav */,
 				4D91BEC91AF453990015CE83 /* ximea_5.mpg */,
 				4D91BECE1AF454510015CE83 /* ximea_7.mpg */,
 				4D91BECA1AF453990015CE83 /* ximea_6.mpg */,
@@ -480,6 +483,7 @@
 			files = (
 				4D91BECC1AF453990015CE83 /* ximea_5.mpg in Resources */,
 				4D78B9331AF2DF87007C7BC6 /* sorted-colors.png in Resources */,
+				4D52F5331B0174BE000A395F /* laugh.wav in Resources */,
 				4D78B9301AF2DF87007C7BC6 /* 640x480_3.mp4 in Resources */,
 				904AD65E1AE89B4100A0D8A6 /* Camera Notes.txt in Resources */,
 				4D91BED11AF598D60015CE83 /* rgb2hls_frag.glsl in Resources */,

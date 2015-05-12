@@ -26,7 +26,7 @@ void BassString::draw(float x, float y, float w, float h) {
     
     float amp;
     if(this->age - this->pluckedAt < this->pluckDuration && this->age > this->pluckDuration)
-        amp = (1 - (this->age - this->pluckedAt) / (float)this->pluckDuration);
+        amp = (1.0f - (float)(this->age - this->pluckedAt) / (float)this->pluckDuration);
     else
         amp = 0;
     
@@ -36,7 +36,7 @@ void BassString::draw(float x, float y, float w, float h) {
     this->path.moveTo(x,y);
     for(int i=0; i<=h; i++) {
         this->path.lineTo(
-            x + (w * amp / 2.0f) * cos((float)(i + this->age*10)/(float)h * 6 * M_PI * this->pitch / 5.0f),
+            x + (w * amp / 2.0f) * cos((float)(i + this->age*20)/(float)h * 6 * M_PI * this->pitch / 5.0f),
             i + y);
     }
     //gl::drawLine(Vec2f(x,y), Vec2f(x, y+h));

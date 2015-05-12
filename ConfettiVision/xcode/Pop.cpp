@@ -25,7 +25,7 @@ void Pop::update() {
     
 }
 
-void Pop::draw() {
+void Pop::draw(float w, float h) {
     gl::SaveColorState save;
 
     if(!this->isAlive()) return;
@@ -33,9 +33,9 @@ void Pop::draw() {
     float s = min(this->age / 3.0f * this->size, this->size);
     if(this->ageLimit - this->age < 6) s = (this->ageLimit - this->age) / 6.0f * this->size;
     
-    tri.moveTo(this->position + Vec2f(s * cos(this->rotation), s * sin(this->rotation)));
-    tri.lineTo(this->position + Vec2f(s * cos(this->rotation + M_PI * 2 / 3), s * sin(this->rotation + M_PI * 2 / 3)));
-    tri.lineTo(this->position + Vec2f(s * cos(this->rotation - M_PI * 2 / 3), s * sin(this->rotation - M_PI * 2 / 3)));
+    tri.moveTo(Vec2f(this->position.x * w, this->position.y * h) + Vec2f(s * cos(this->rotation), s * sin(this->rotation)));
+    tri.lineTo(Vec2f(this->position.x * w, this->position.y * h) + Vec2f(s * cos(this->rotation + M_PI * 2 / 3), s * sin(this->rotation + M_PI * 2 / 3)));
+    tri.lineTo(Vec2f(this->position.x * w, this->position.y * h) + Vec2f(s * cos(this->rotation - M_PI * 2 / 3), s * sin(this->rotation - M_PI * 2 / 3)));
     
     gl::drawSolid(tri);
 }

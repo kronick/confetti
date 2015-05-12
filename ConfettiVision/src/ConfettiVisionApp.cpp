@@ -254,6 +254,9 @@ void ConfettiVisionApp::update()
         case Mode::PLAYBACK:
         {
             this->balloon->update();
+            if(this->balloon->getCurrentSpeed() < 0) {
+                this->balloon->loadMovieFile(this->mMoviePaths[++this->autoplayIndex % this->mMoviePaths.size()]);
+            }
             break;
         }
         case Mode::CAPTURE:
@@ -341,7 +344,7 @@ void ConfettiVisionApp::drawReview() {
 void ConfettiVisionApp::drawPlayback() {
     
 
-    float topPaneHeight = getWindowHeight()*0.5;
+    float topPaneHeight = getWindowHeight()*0.75;
 
     // Draw the per-color preview channels
     gl::pushMatrices();
@@ -360,8 +363,8 @@ void ConfettiVisionApp::drawPlayback() {
     Vec2f videoSize(640,480);
     if(sourceVid)
         videoSize = Vec2f(sourceVid.getWidth(), sourceVid.getHeight());
-    //float videoPadding = 0.1 * topPaneHeight;
-    float videoPadding = 0;
+    float videoPadding = 0.1 * topPaneHeight;
+    //float videoPadding = 0;
     float scale_factor = (topPaneHeight - videoPadding*2) / videoSize.y;
     float video_w = videoSize.x * scale_factor;
     float video_h = videoSize.y * scale_factor;
@@ -616,4 +619,4 @@ void ConfettiVisionApp::setupParams() {
         this->config->load(fs::path(this->configFilename));
 }
 
-CINDER_APP_NATIVE( ConfettiVisionApp, RendererGl( RendererGl::AA_MSAA_4 ) )
+CINDER_APP_NATIVE( ConfettiVisionApp, RendererGl( RendererGl::AA_MSAA_2 ) )

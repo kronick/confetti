@@ -108,6 +108,9 @@ public:
     
     bool isPlaybackPlaying = false;
     
+    int autoplayIndex = 0;
+    bool autoplay = true;
+    
     Mode currentMode = Mode::PLAYBACK;
     
     ci::Vec2f mousePosition;

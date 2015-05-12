@@ -27,7 +27,7 @@ class Pop {
     Pop(float x, float y, float size, float r);
     void init();
     void update();
-    void draw();
+    void draw(float w, float h);
     bool isAlive() { return this->age <= this->ageLimit; }
     
   private:

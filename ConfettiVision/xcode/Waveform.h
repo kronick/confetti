@@ -10,6 +10,9 @@
 
 #include <memory>
 #include "cinder/Cinder.h"
+#include "cinder/audio/SamplePlayerNode.h"
+#include "cinder/audio/Source.h"
+#include "ColorDefinitions.h"
 
 
 class Waveform;
@@ -19,18 +22,24 @@ class Waveform {
     
 public:
     // Smart pointer constructors
-    static WaveformRef create(float x, float y, float size, float r) { return std::make_shared<Waveform>(x, y, size, r); }
+    static WaveformRef create(ci::DataSourceRef file) { return std::make_shared<Waveform>(file); }
     
 public:
-    Waveform(float x, float y, float size, float r);
+    Waveform(ci::DataSourceRef file);
     void init();
     void update();
-    void draw();
+    void draw(float w, float h);
+    void highlight(float start, float end, float volume);
     
 private:
     ci::Vec2f position;
     float rotation;
     int age;
+    
+    int start, end;
+    ci::audio::BufferRef sampleBuffer;
+    float volume;
+    int lastUpdate;
     
     int ageLimit;
 };

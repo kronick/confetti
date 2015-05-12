@@ -88,6 +88,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
             
             int n_octaves = 3;
             int v = (1-(p.position.y / this->videoSize.y)) * this->chord.size() * n_octaves + 3;
+            int note_index = v;
             int octave = v / this->chord.size();
             v %= this->chord.size();
             int n = this->chord[v];
@@ -100,6 +101,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
             message.addFloatArg(n);         // Note
             message.addFloatArg(volume);      // Volume
             message.addFloatArg(pan);
+            message.addIntArg(note_index);
         }
             break;
             
@@ -136,7 +138,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
         case ParticleColor::RED:
         {
             // Pop samples when particle hits bottom
-            if(p.hasNoteBeenSent || p.position.y < (this->videoSize.y * .9) || p.getVelocityHistory()[0].y > (this->videoSize.y * 0.9)) return 0;
+            if(p.hasNoteBeenSent || p.position.y < (this->videoSize.y * .95) || p.getVelocityHistory()[0].y > (this->videoSize.y * 0.95)) return 0;
             
             // Only send if this particle hasn't triggered before.
             message.setAddress("/pop");
@@ -167,7 +169,7 @@ int OSCMessenger::sendMessagesForParticle(Particle &p) {
         case ParticleColor::YELLOW:
         {
             // Trigger the BASS synth when these particles hit the bottom
-            if(p.hasNoteBeenSent || p.age < 20 || p.position.y < this->videoSize.y * .9 ||  p.getVelocityHistory()[0].y > (this->videoSize.y * 0.9)) return 0;
+            if(p.hasNoteBeenSent || p.age < 20 || p.position.y < this->videoSize.y * .95 ||  p.getVelocityHistory()[0].y > (this->videoSize.y * 0.95)) return 0;
             
             message.setAddress("/bass");
             message.addIntArg(p.ID);
