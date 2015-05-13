@@ -57,12 +57,15 @@ class Balloon {
     //bool isReady() { return this->loaded && !this->loading; }
     bool isReady() { return this->loaded  || this->loading; }
     bool hasPopped() { return this->poppedYet; }
+    bool hasLooped() { return this->loopedYet; }
     bool loadMovieFile(const ci::fs::path &path);
     void setFrames(std::vector<cv::Mat> frames);
+    void seekFrame(int f) { if(f < this->frames.size() && f >= 0) this->currentFrameNumber = f;}
     
     void setDebug(bool d);
     bool getDebug() { return this->debugMode; }
-    void drawPreviews(float width, float height);
+    void drawMusicGraphics(float width, float height);
+    void drawChannelGraph(ParticleColor color, float width, float height);
     void drawParticles(ParticleColor color, ci::Vec2f size);
     
     std::vector<cv::Mat> getFrames() { return this->frames; }
@@ -99,6 +102,7 @@ class Balloon {
     int         playbackRate = 1;
     int         currentFrameNumber = 0;
     bool        loop = true;
+    bool        loopedYet = false;
     bool        paused = false;
     bool        loaded = false;
     bool        loading = false;

@@ -82,9 +82,25 @@ void ConfettiVisionApp::setThresholds() {
 
 void ConfettiVisionApp::mouseDown( MouseEvent event )
 {
+    this->draggingMouse = true;
+    this->mousePosition = Vec2f(event.getX(),event.getY());
+    if(event.isRight())
+        this->scrubbingMouse = true;
+    
+    hideCursor();
+}
+
+void ConfettiVisionApp::mouseUp(MouseEvent event) {
+    this->draggingMouse = false;
+    this->scrubbingMouse = false;
+    showCursor();
 }
 
 void ConfettiVisionApp::mouseMove( MouseEvent event ){
+    this->mousePosition = Vec2f(event.getX(),event.getY());
+}
+
+void ConfettiVisionApp::mouseDrag( MouseEvent event ){
     this->mousePosition = Vec2f(event.getX(),event.getY());
 }
 
@@ -102,7 +118,7 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
         switch(channel) {
             case 45:    // RECORD
             {
-                if (this->currentMode == Mode::PLAYBACK) {
+                if (this->currentMode == Mode::PLAYBACK && this->paramCalibrate) {
                     if(this->camera.getCapturedFrames().size() > 0)
                         this->camera.saveBuffer("~/Desktop/balloon_" + toString(this->balloon->getID()));
                 }
@@ -135,6 +151,19 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
                     this->setMode(Mode::CAPTURE);
                 else if(this->currentMode == Mode::CAPTURE)
                     this->setMode(Mode::PLAYBACK);
+                break;
+            }
+            case 58:
+            {
+                this->autoplay = true;
+                this->balloon->loadMovieFile(this->mMoviePaths[--this->autoplayIndex % this->mMoviePaths.size()]);
+                break;
+            }
+            case 59:
+            {
+                this->autoplay = true;
+                this->balloon->loadMovieFile(this->mMoviePaths[++this->autoplayIndex % this->mMoviePaths.size()]);
+                break; 
             }
         }
     }
@@ -142,8 +171,29 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
     if(channel == 60) { // "set" button turns on/off calibration mode
         this->setCalibrate(value >= 127);
     }
+    
+    if(channel == 44) { // fast forward button turns on/off scrub mode
+        this->paramScrub = (value >= 127);
+    }
+    
+    if(this->paramScrub && this->currentMode == Mode::PLAYBACK && channel == 16) {
+        float p = value - 64;
+        p = p > 0 ? pow(p, 1.4) : -pow(abs(p), 1.4);
+        int s = lmap((float)p, -338.0f, 338.0f, -24.0f, 24.0f);
+        this->balloon->setSpeed(s);
+        console() << s << endl;
+    }
+    
+    if(this->paramCalibrate && this->currentMode == Mode::CAPTURE) {
+        // Allow setting of the camera gain
+        if(channel == 23) {
+            this->paramGain = lmap((float)value, 0.0f, 127.0f, -3.4f, 7.4f);
+            this->camera.setGain(this->paramGain);
+        }
+    }
+    
     // Only set calibration if debugmode is on
-    if(!this->paramCalibrate)
+    if(!this->paramCalibrate || !(this->currentMode == Mode::PLAYBACK))
         return;
     
     switch(channel) {
@@ -235,6 +285,7 @@ void ConfettiVisionApp::setMode(Mode m ) {
         }
         case Mode::PLAYBACK:
         {
+            this->autoplay = false;
             break;
         }
     }
@@ -253,8 +304,12 @@ void ConfettiVisionApp::update()
     switch(this->currentMode) {
         case Mode::PLAYBACK:
         {
+            if(this->scrubbingMouse) {
+                this->balloon->seekFrame(this->mousePosition.x / getWindowWidth() * this->balloon->getFramecount());
+                //this->balloon->pause();
+            }
             this->balloon->update();
-            if(this->balloon->getCurrentSpeed() < 0) {
+            if(this->autoplay && this->balloon->hasLooped() && this->balloon->getCurrentFrameNumber() <= 0) {
                 this->balloon->loadMovieFile(this->mMoviePaths[++this->autoplayIndex % this->mMoviePaths.size()]);
             }
             break;
@@ -349,7 +404,7 @@ void ConfettiVisionApp::drawPlayback() {
     // Draw the per-color preview channels
     gl::pushMatrices();
         gl::translate(0, topPaneHeight);
-        this->balloon->drawPreviews(getWindowWidth(), getWindowHeight()  - topPaneHeight);
+        this->balloon->drawMusicGraphics(getWindowWidth(), getWindowHeight()  - topPaneHeight);
     gl::popMatrices();
     
     
@@ -368,15 +423,30 @@ void ConfettiVisionApp::drawPlayback() {
     float scale_factor = (topPaneHeight - videoPadding*2) / videoSize.y;
     float video_w = videoSize.x * scale_factor;
     float video_h = videoSize.y * scale_factor;
+    float progressBarHeight = videoPadding / 4.0f;
+    this->progressBarHeight = progressBarHeight;
+    
+    float channel_pane_w = (getWindowWidth() - video_w) / 2.0f;
+    float channel_pane_h = topPaneHeight - progressBarHeight;
+    float channel_padding_y = channel_pane_h / 32.0f;
+    float channel_h = (channel_pane_h - channel_padding_y * 5) / 4.0f;
+    float channel_w = channel_h * video_w / video_h;
+    float channel_padding_x = (channel_pane_w - channel_w) / 4.0f;
     
     
     if(sourceVid) {
-        gl::draw(sourceVid, Rectf(getWindowWidth() / 2 - video_w/2, videoPadding, getWindowWidth() / 2 + video_w/2, videoPadding + video_h));
+        gl::color(COLOR_DARKGREY);
+        float leftShift = 0;
+        if(this->paramCalibrate)
+            leftShift = video_w/2;
+        Rectf videoRect = Rectf(getWindowWidth() / 2 - video_w/2 + leftShift, videoPadding, getWindowWidth() / 2 + video_w/2 + leftShift, videoPadding + video_h);
+        gl::drawSolidRect(videoRect.inflated(Vec2f(video_w * 0.01f, video_w * 0.01f)));
+        gl::color(COLOR_WHITE);
+        gl::draw(sourceVid, videoRect);
     }
     
     
     // Draw progress bar across top
-    float progressBarHeight = videoPadding / 2.0f;
     gl::color(COLOR_WHITE);
     gl::drawSolidRect(Rectf(0,0, getWindowWidth(), progressBarHeight));
     
@@ -408,6 +478,55 @@ void ConfettiVisionApp::drawPlayback() {
             drawString("LOADING...", Vec2f(0, 70), 20);
         }
         drawString("FRAME " + toString(this->balloon->getCurrentFrameNumber()) + " / " + toString(this->balloon->getFramecount()), Vec2f(0, 90), 20);
+    }
+    gl::popMatrices();
+    
+    // Draw the individual channel previews
+    gl::pushMatrices();
+    {
+        gl::pushMatrices();
+        {
+            float red_scale = 1.0f;
+            float yellow_scale = 1.0f;
+            float green_scale = 1.0f;
+            float blue_scale = 1.0f;
+            
+            ParticleColor colors [4] = {ParticleColor::RED, ParticleColor::YELLOW, ParticleColor::GREEN, ParticleColor::BLUE};
+            ParticleColor calibrationColor = colors[this->currentCalibrationColor % 4];
+            gl::translate(channel_padding_x, channel_padding_y + progressBarHeight);
+            
+            if(this->paramCalibrate) {
+                switch(calibrationColor) {
+                    case ParticleColor::RED:
+                        gl::color(COLOR_RED);
+                        break;
+                    case ParticleColor::YELLOW:
+                        gl::color(COLOR_YELLOW);
+                        break;
+                    case ParticleColor::GREEN:
+                        gl::color(COLOR_GREEN);
+                        break;
+                    case ParticleColor::BLUE:
+                        gl::color(COLOR_BLUE);
+                        break;
+                }
+                
+                gl::drawSolidRect(Rectf(-channel_w*4*.02, -channel_h*4*.02, channel_w *4* 1.02,channel_h *4* 1.02));
+                
+                gl::color(COLOR_WHITE);
+                this->balloon->drawChannelGraph(calibrationColor, channel_w*4, channel_h*4);
+            }
+            else {
+                this->balloon->drawChannelGraph(ParticleColor::RED, channel_w, channel_h);
+                gl::translate(0, channel_h + channel_padding_y);
+                this->balloon->drawChannelGraph(ParticleColor::YELLOW, channel_w, channel_h);
+                gl::translate(0, channel_h + channel_padding_y);
+                this->balloon->drawChannelGraph(ParticleColor::GREEN, channel_w, channel_h);
+                gl::translate(0, channel_h + channel_padding_y);
+                this->balloon->drawChannelGraph(ParticleColor::BLUE, channel_w, channel_h);
+            }
+        }
+        gl::popMatrices();
     }
     gl::popMatrices();
     

@@ -37,7 +37,9 @@ public:
     void prepareSettings(Settings *settings);
     void setupParams();
     void mouseDown( ci::app::MouseEvent event );
+    void mouseUp( ci::app::MouseEvent event );
     void mouseMove(ci::app::MouseEvent event);
+    void mouseDrag(ci::app::MouseEvent event);
     void keyDown( ci::app::KeyEvent event );
     
     void messageReceived(const ci::osc::Message *m);
@@ -88,6 +90,7 @@ public:
     
     
     bool paramCalibrate = false;
+    bool paramScrub = false;
     float paramExposure;
     float paramGain;
     float paramGammaY;
@@ -108,10 +111,14 @@ public:
     
     bool isPlaybackPlaying = false;
     
-    int autoplayIndex = 0;
+    int autoplayIndex = 1;
     bool autoplay = true;
+
+    float progressBarHeight;
     
     Mode currentMode = Mode::PLAYBACK;
     
     ci::Vec2f mousePosition;
+    bool  draggingMouse = false;
+    bool scrubbingMouse = false;
 };

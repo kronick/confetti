@@ -21,6 +21,7 @@ Balloon::Balloon(vector<cv::Mat> frames) {
     this->init();
     this->frames = frames;
     this->loaded = true;
+    this->frameCount = frames.size();
 }
 
 Balloon::~Balloon() {
@@ -111,6 +112,7 @@ void Balloon::update() {
         app::console() << "BANG!!" << endl;
         this->poppedYet = true;
         this->poppedFrame = this->currentFrameNumber;
+        this->playbackRate = 1;
     }
     else if(!this->poppedYet) {
         // Don't track particles until the pop happens
@@ -142,13 +144,14 @@ void Balloon::update() {
         if(!this->poppedYet)
             this->playbackRate = this->speed_forward;
         else
-            this->playbackRate = 1;
+            this->playbackRate = this->playbackRate;
     }
     else {
         if(this->currentFrameNumber <= 0) {
             if(this->loop) {
                 this->reset();
                 this->playbackRate = 1;
+                this->loopedYet = true;
             }
         }
     }
@@ -171,6 +174,7 @@ void Balloon::reset() {
     this->seenABalloon = false;
     this->largestBalloonSize = 0;
     this->poppedFrame = -1;
+    this->loopedYet = false;
 }
 
 
@@ -221,6 +225,7 @@ void Balloon::setFrames(std::vector<cv::Mat> frames) {
     this->frames = frames;
     this->ID = ++last_balloon_ID;
     this->reset();
+    this->frameCount = this->frames.size();
 }
 
 bool Balloon::loadMovieFile(const ci::fs::path &path) {
@@ -336,15 +341,20 @@ void Balloon::updateGraphics() {
     for(auto &p : this->bassStrings) {
         p->update();
     }
-    for(auto it = synthLines.begin(); it != synthLines.end(); ++it) {
-        it->second->update();
+    for(auto it = synthLines.begin(); it != synthLines.end();) {
+        if(it->second->isAlive()) {
+            it->second->update();
+            ++it;
+        }
+        else {
+            it = this->synthLines.erase(it);
+        }
     }
     
 }
 
-void Balloon::drawPreviews(float width, float height) {
+void Balloon::drawChannelGraph(ParticleColor color, float width, float height) {
     gl::SaveColorState s;
-    gl::pushMatrices();
     
     Vec2f videoSize(640,480);
     this->drawWidth = width;
@@ -352,43 +362,116 @@ void Balloon::drawPreviews(float width, float height) {
     if(this->frames.size() > 0)
         videoSize = Vec2f(this->frames[0].cols, this->frames[0].rows);
     
-    gl::Texture redTex = this->particleCollections[ParticleColor::RED]->getDebugView();
-    gl::Texture greenTex = this->particleCollections[ParticleColor::GREEN]->getDebugView();
-    gl::Texture blueTex = this->particleCollections[ParticleColor::BLUE]->getDebugView();
-    gl::Texture yellowTex = this->particleCollections[ParticleColor::YELLOW]->getDebugView();
+    float scale_x = (width) / videoSize.x;
+    float scale_y = (height) / videoSize.y;
+    
+    
+    gl::pushMatrices();
+    {
+        // Translate to TL corner of preview video pane
+        gl::scale(scale_x, scale_y);
 
-    float preview_padding = 0.2 * width / 4;
-    float preview_scale_factor = (width/4-2*preview_padding) / videoSize.x;
-    float preview_w = videoSize.x * preview_scale_factor;
-    float preview_h = videoSize.y * preview_scale_factor;
+        if(this->debugMode) {
+            gl::color(COLOR_WHITE);
+            gl::draw(this->particleCollections[color]->getDebugView());
+        }
+        else {
+            // Draw graph lines relevant to this color
+            gl::color(COLOR_DARKGREY);
+            gl::drawSolidRect(Rectf(0,0, videoSize.x, videoSize.y));
+            switch(color) {
+                case ParticleColor::RED:
+                {
+                    gl::color(COLOR_RED);
+                    gl::lineWidth(1);
+                    gl::drawLine(Vec2f(0,videoSize.y * 0.95), Vec2f(videoSize.x, videoSize.y * 0.95));
+                    break;
+                }
+                case ParticleColor::YELLOW:
+                {
+                    gl::color(COLOR_YELLOW);
+                    gl::lineWidth(2);
+                    // Finish line
+                    gl::drawLine(Vec2f(0,videoSize.y * 0.95), Vec2f(videoSize.x, videoSize.y * 0.95));
+            
+                    gl::lineWidth(2);
+                    float cols = 5.0f;
+                    float dashOn = 4;
+                    float dashOff = 8;
+                    for(int i=1; i<cols; i++) {
+                        // Vertical lines
+                        float x = i * videoSize.x / cols;
+                        for(int j=0; j<videoSize.y/(dashOn + dashOff); j++) {
+                            gl::drawLine(Vec2f(x, j * (dashOn + dashOff)), Vec2f(x, j * (dashOn + dashOff) + dashOn));
+                        }
+                    }
+                    
+                    break;
+                }
+                case ParticleColor::GREEN:
+                {
+                    gl::color(COLOR_WHITE);
+                    gl::lineWidth(1);
+                    float rows = 10.0f;
+                    float cols = 13.0f;
+                    float dashOn = 4;
+                    float dashOff = 8;
+                    for(int i=1; i<rows; i++) {
+                        // Horizontal lines
+                        float y = i * videoSize.y / rows;
+                        for(int j=0; j<videoSize.x/(dashOn + dashOff); j++) {
+                            gl::drawLine(Vec2f(j * (dashOn + dashOff), y), Vec2f(j * (dashOn + dashOff) + dashOn, y));
+                        }
+                    }
+                    for(int i=1; i<cols; i++) {
+                        // Vertical lines
+                        float x = i * videoSize.x / cols;
+                        for(int j=0; j<videoSize.y/(dashOn + dashOff); j++) {
+                            gl::drawLine(Vec2f(x, j * (dashOn + dashOff)), Vec2f(x, j * (dashOn + dashOff) + dashOn));
+                        }
+                    }
+                    
+                    break;
+                }
+                case ParticleColor::BLUE:
+                {
+                    gl::color(COLOR_WHITE);
+                    gl::lineWidth(1);
+                    float rows = 15.0f;
+
+                    float dashOn = 4;
+                    float dashOff = 8;
+                    for(int i=1; i<rows; i++) {
+                        // Horizontal lines
+                        float y = i * videoSize.y / rows;
+                        for(int j=0; j<videoSize.x/(dashOn + dashOff); j++) {
+                            gl::drawLine(Vec2f(j * (dashOn + dashOff), y), Vec2f(j * (dashOn + dashOff) + dashOn, y));
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+            
+            drawParticles(color, videoSize);
+        }
+    }
+    gl::popMatrices();
+}
+
+
+void Balloon::drawMusicGraphics(float width, float height) {
+    gl::SaveColorState s;
+    gl::pushMatrices();
     
     //Draw red pops
     gl::color(COLOR_RED);
     gl::drawSolidRect(Rectf(0,0,width/4,height));
-    // Draw pop
+    
     gl::color(COLOR_WHITE);
     for(auto &p : this->pops) {
         p->draw(width/4, height);
     }
-    
-//    gl::pushMatrices();
-//    {
-//        // Translate to TL corner of preview video pane
-//        gl::translate(preview_padding, height - preview_h - preview_padding/2);
-//        gl::scale(preview_scale_factor, preview_scale_factor);
-//        
-//        if(this->debugMode) {
-//            gl::color(COLOR_WHITE);
-//            gl::draw(this->particleCollections[ParticleColor::RED]->getDebugView());
-//        }
-//        else
-//            drawParticles(ParticleColor::RED, videoSize);
-//        
-//        gl::color(COLOR_RED);
-//        gl::lineWidth(1);
-//        gl::drawLine(Vec2f(-videoSize.x * .1,videoSize.y * 0.9), Vec2f(videoSize.x * 1.1, videoSize.y * 0.9));
-//    }
-//    gl::popMatrices();
     
     // Draw Yellow bass lines
     gl::translate(width/4, 0);
@@ -402,85 +485,8 @@ void Balloon::drawPreviews(float width, float height) {
         i++;
     }
     
-//    gl::pushMatrices();
-//    {
-//        // Translate to TL corner of preview video pane
-//        gl::translate(preview_padding, height - preview_h - preview_padding/2);
-//        gl::scale(preview_scale_factor, preview_scale_factor);
-//        
-//        if(this->debugMode) {
-//            gl::color(COLOR_WHITE);
-//            gl::draw(this->particleCollections[ParticleColor::YELLOW]->getDebugView());
-//        }
-//        else
-//            drawParticles(ParticleColor::YELLOW, videoSize);
-//        
-//        gl::color(COLOR_WHITE);
-//        gl::lineWidth(2);
-//        // Finish line
-//        gl::drawLine(Vec2f(-videoSize.x * .1,videoSize.y * 0.9), Vec2f(videoSize.x * 1.1, videoSize.y * 0.9));
-//
-//        gl::lineWidth(2);
-//        float cols = 5.0f;
-//        float dashOn = 4;
-//        float dashOff = 8;
-//        for(int i=1; i<cols; i++) {
-//            // Vertical lines
-//            float x = i * videoSize.x / cols;
-//            for(int j=0; j<videoSize.y/(dashOn + dashOff); j++) {
-//                gl::drawLine(Vec2f(x, j * (dashOn + dashOff)), Vec2f(x, j * (dashOn + dashOff) + dashOn));
-//            }
-//        }
-//    }
-//    gl::popMatrices();
-    
-    // Draw green laugh samples
-    gl::translate(width/4, 0);
-    gl::color(COLOR_GREEN);
-    gl::drawSolidRect(Rectf(0,0,width/4,height));
-    
-    gl::color(COLOR_WHITE);
-    this->waveform->draw(width/4, height);
-    
-//    gl::pushMatrices();
-//    {
-//        // Translate to TL corner of preview video pane
-//        gl::translate(preview_padding, height - preview_h - preview_padding/2);
-//        gl::scale(preview_scale_factor, preview_scale_factor);
-//        
-//        if(this->debugMode) {
-//            gl::color(COLOR_WHITE);
-//            gl::draw(this->particleCollections[ParticleColor::GREEN]->getDebugView());
-//        }
-//        else
-//            drawParticles(ParticleColor::GREEN, videoSize);
-//        
-//        gl::color(COLOR_WHITE);
-//        gl::lineWidth(2);
-//        float rows = 10.0f;
-//        float cols = 13.0f;
-//        float dashOn = 4;
-//        float dashOff = 8;
-//        for(int i=1; i<rows; i++) {
-//            // Horizontal lines
-//            float y = i * videoSize.y / rows;
-//            for(int j=0; j<videoSize.x/(dashOn + dashOff); j++) {
-//                gl::drawLine(Vec2f(j * (dashOn + dashOff), y), Vec2f(j * (dashOn + dashOff) + dashOn, y));
-//            }
-//        }
-//        for(int i=1; i<cols; i++) {
-//            // Vertical lines
-//            float x = i * videoSize.x / cols;
-//            for(int j=0; j<videoSize.y/(dashOn + dashOff); j++) {
-//                gl::drawLine(Vec2f(x, j * (dashOn + dashOff)), Vec2f(x, j * (dashOn + dashOff) + dashOn));
-//            }
-//        }
-//    }
-//    gl::popMatrices();
-    
-    
     // Draw blue note lines
-    gl::translate(width/4, 0);
+    gl::translate(2*width/4, 0);
     gl::color(COLOR_BLUE);
     gl::drawSolidRect(Rectf(0,0,width/4,height));
     
@@ -488,37 +494,14 @@ void Balloon::drawPreviews(float width, float height) {
     for(auto l : this->synthLines) {
         l.second->draw(width/4, height);
     }
-//    gl::pushMatrices();
-//    {
-//        // Translate to TL corner of preview video pane
-//        gl::translate(preview_padding, height - preview_h - preview_padding/2);
-//        gl::scale(preview_scale_factor, preview_scale_factor);
-//        
-//        if(this->debugMode) {
-//            gl::color(COLOR_WHITE);
-//            gl::draw(this->particleCollections[ParticleColor::BLUE]->getDebugView());
-//        }
-//        else
-//            drawParticles(ParticleColor::BLUE, videoSize);
-//        
-//        
-//        // Draw Grid Lines
-//        gl::color(COLOR_WHITE);
-//        gl::lineWidth(2);
-//        float rows = 15.0f;
-//        //float cols = 13.0f;
-//        float dashOn = 4;
-//        float dashOff = 8;
-//        for(int i=1; i<rows; i++) {
-//            // Horizontal lines
-//            float y = i * videoSize.y / rows;
-//            for(int j=0; j<videoSize.x/(dashOn + dashOff); j++) {
-//                gl::drawLine(Vec2f(j * (dashOn + dashOff), y), Vec2f(j * (dashOn + dashOff) + dashOn, y));
-//            }
-//        }
-//    }
-//    gl::popMatrices();
-//    
+    
+    // Draw green laugh samples
+    gl::translate(-width/4, 0);
+    gl::color(COLOR_GREEN);
+    gl::drawSolidRect(Rectf(0,0,width/4,height));
+    
+    gl::color(COLOR_WHITE);
+    this->waveform->draw(width/4, height);
     
     gl::popMatrices();
 }
@@ -541,7 +524,7 @@ void Balloon::drawParticles(ParticleColor color, Vec2f size) {
             drawColor = COLOR_YELLOW;
             break;
     }
-    gl::drawSolidRect(Rectf(0,0,size.x, size.y));
+    //gl::drawSolidRect(Rectf(0,0,size.x, size.y));
     for(auto &p : this->particleCollections[color]->getParticles()) {
         if(p->isActive() && p->isAlive()) {
             

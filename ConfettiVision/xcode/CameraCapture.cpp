@@ -56,7 +56,8 @@ void CameraCapture::stopStream() {
 ci::gl::TextureRef CameraCapture::getPreview() {
 
     if(previewImage.rows == 0) return NULL;
-    ci::gl::TextureRef tex = ci::gl::Texture::create(ci::fromOcv(this->previewImage));
+    ci::ImageSourceRef img = ci::fromOcv(this->previewImage);
+    ci::gl::TextureRef tex = ci::gl::Texture::create(img);
     return tex;
 }
 

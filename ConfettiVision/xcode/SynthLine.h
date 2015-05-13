@@ -43,7 +43,7 @@ public:
     void addPitch(int pitch, float volume);
     void changePitch(int toPitch, int time, float volume);
     void stop();
-    bool isAlive() { return this->alive; }
+    bool isAlive() { return this->pitchBlocks.size() > 0 || this->pitchBends.size() > 0; }
     
 private:
     ci::Vec2f position;

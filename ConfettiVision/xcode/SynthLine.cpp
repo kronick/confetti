@@ -100,11 +100,11 @@ void SynthLine::draw(float w, float h) {
         }
         else {
             // DRAW THIS BLOCK
-            float y = h - b->pitch / (this->octaves * 6.0f) * h;
-            float left = max(0.0f, (1 - (this->age - b->startTime) / tickWidth) * w);
+            float y = h - b->pitch / (this->octaves * 6.0f + 2) * h;
+            float left = (1 - (this->age - b->startTime) / tickWidth) * w;
             float right = min(w, (1 - (this->age - b->endTime) / tickWidth) * w);
-            float thickness = h/60.0f * b->volume / 4.0f;
-            gl::drawSolidRect(Rectf(left, y-thickness, right, y+thickness));
+            float thickness = pow(h/60.0f * b->volume / 4.0f, 1.4);
+            gl::drawSolidRect(Rectf(left, y-thickness/2, right, y+thickness/2));
             //gl::drawSolidCircle(Vec2f(left, y), thickness);
             //gl::drawLine(Vec2f(left, y), Vec2f(right, y));
             
@@ -118,8 +118,8 @@ void SynthLine::draw(float w, float h) {
         else {
             // DRAW THIS LINE
             gl::lineWidth(6 * b->volume / 4.0f);
-            float start_y = h - b->startPitch / (this->octaves * 6.0f) * h;
-            float end_y = h - b->endPitch / (this->octaves * 6.0f) * h;
+            float start_y = h - b->startPitch / (this->octaves * 6.0f + 2) * h;
+            float end_y = h - b->endPitch / (this->octaves * 6.0f + 2) * h;
             float left = (1 - (this->age - b->startTime) / tickWidth) * w;
             float right = (1 - (this->age - b->endTime) / tickWidth) * w;
             gl::drawLine(Vec2f(left, start_y), Vec2f(right, end_y));

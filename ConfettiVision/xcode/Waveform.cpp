@@ -14,6 +14,8 @@ using namespace ci;
 Waveform::Waveform(DataSourceRef file) {
     audio::SourceFileRef sourceFile = audio::SourceFile::create(file);
     this->sampleBuffer = sourceFile->loadBuffer();
+    this->start = 0;
+    this->end = 0;
 }
 
 void Waveform::init() {
@@ -36,6 +38,7 @@ void Waveform::highlight(float start, float end, float volume) {
 }
 
 void Waveform::draw(float w, float h) {
+    //return;
     this->update();
     
     // Set alpha
