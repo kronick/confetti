@@ -56,11 +56,13 @@ class ImageSourceCvMat : public ImageSource {
 		ImageSource::RowFunc func = setupRowFunc( target );
 		
 		const uint8_t *data = mData;
+        if(mData == NULL) return;
 		for( int32_t row = 0; row < mHeight; ++row ) {
 			((*this).*func)( target, row, data );
 			data += mRowBytes;
 		}
 	}
+    bool hasData() { return this->mData != NULL; }
 	
 	const uint8_t		*mData;
 	int32_t				mRowBytes;

@@ -57,8 +57,10 @@ ci::gl::TextureRef CameraCapture::getPreview() {
 
     if(previewImage.rows == 0) return NULL;
     ci::ImageSourceRef img = ci::fromOcv(this->previewImage);
-    ci::gl::TextureRef tex = ci::gl::Texture::create(img);
-    return tex;
+    if(img && img->getWidth() > 0) {
+        ci::gl::TextureRef tex = ci::gl::Texture::create(img);
+        return tex;
+    }
 }
 
 void CameraCapture::postTrigger() {

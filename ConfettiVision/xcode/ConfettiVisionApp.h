@@ -121,4 +121,12 @@ public:
     ci::Vec2f mousePosition;
     bool  draggingMouse = false;
     bool scrubbingMouse = false;
+    
+    
+    bool drawMusicGraphics = true;
+    bool fourUpChannels = true;
+    float topPanePercent = 0.81
+    ;
+    ParticleColor soloColor;
+    bool soloOn = false;
 };

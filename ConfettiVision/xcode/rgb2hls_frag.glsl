@@ -61,6 +61,7 @@ vec3 RGBtoHLS(vec3 RGB)
 //}
 
 void main() {
+    //vec3 hls = RGBtoHLS(texture2D(tex0, vec2(1,1) - gl_TexCoord[0].st).rgb);
     vec3 hls = RGBtoHLS(texture2D(tex0, gl_TexCoord[0].st).rgb);
     gl_FragColor.rgb = (all(lessThan(hls,thresholdMax)) && all(greaterThan(hls, thresholdMin))) ? hls : vec3(0,0,0);
 //    gl_FragColor.rgb = RGBtoHLS(texture2D(tex0, gl_TexCoord[0].st).rgb);

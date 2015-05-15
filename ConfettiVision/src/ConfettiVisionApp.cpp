@@ -9,6 +9,8 @@ using namespace std;
 void ConfettiVisionApp::prepareSettings(Settings * settings) {
     settings->enableHighDensityDisplay( true );
     settings->setWindowSize(1280, 720);
+    settings->setWindowPos(0, 0);
+    settings->setFullScreen();
     //settings->setWindowPos(0, 0);
 }
 
@@ -26,7 +28,7 @@ void ConfettiVisionApp::setup()
     textureFonts[36] = gl::TextureFont::create(Font("Avenir Black", 36*2));
     textureFonts[48] = gl::TextureFont::create(Font("Avenir Black", 48*2));
     
-    this->configFilename = "config.xml";
+    this->configFilename = "/Users/diskcactus1/Desktop/config.xml";
     
     // Set up Movie
     // -------------------------------------
@@ -165,6 +167,55 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
                 this->balloon->loadMovieFile(this->mMoviePaths[++this->autoplayIndex % this->mMoviePaths.size()]);
                 break; 
             }
+            case 32:
+            {
+                // SOLO RED
+                if(this->soloColor == ParticleColor::RED) {
+                    this->soloOn = false;
+                }
+                else {
+                    this->soloColor = ParticleColor::RED;
+                    this->soloOn = true;
+                }
+                break;
+            }
+            case 33:
+            {
+                // SOLO YELLOW
+                if(this->soloColor == ParticleColor::YELLOW) {
+                    this->soloOn = false;
+                }
+                else {
+                    this->soloColor = ParticleColor::YELLOW;
+                    this->soloOn = true;
+                }
+                break;
+            }
+            case 34:
+            {
+                // SOLO GREEN
+                if(this->soloColor == ParticleColor::GREEN) {
+                    this->soloOn = false;
+                }
+                else {
+                    this->soloColor = ParticleColor::GREEN;
+                    this->soloOn = true;
+                }
+                break;
+            }
+            case 35:
+            {
+                // SOLO BLUE
+                if(this->soloColor == ParticleColor::BLUE) {
+                    this->soloOn = false;
+                }
+                else {
+                    this->soloColor = ParticleColor::BLUE;
+                    this->soloOn = true;
+                }
+                break;
+            }
+
         }
     }
     
@@ -191,6 +242,7 @@ void ConfettiVisionApp::messageReceived(const osc::Message *m) {
             this->camera.setGain(this->paramGain);
         }
     }
+    
     
     // Only set calibration if debugmode is on
     if(!this->paramCalibrate || !(this->currentMode == Mode::PLAYBACK))
@@ -362,11 +414,15 @@ void ConfettiVisionApp::draw()
 void ConfettiVisionApp::drawCapture() {
     if(this->cameraPreview) {
         float scale_factor = getWindowHeight() / (float)this->cameraPreview->getHeight();
-        gl::draw(this->cameraPreview,
-                 Rectf(getWindowWidth()/2 - this->cameraPreview->getWidth() * scale_factor / 2,
-                       getWindowHeight()/2 - this->cameraPreview->getHeight() * scale_factor / 2,
-                       getWindowWidth()/2 + this->cameraPreview->getWidth() * scale_factor / 2,
-                       getWindowHeight()/2 + this->cameraPreview->getHeight() * scale_factor / 2));
+        Rectf cameraRect(getWindowWidth()/2 - this->cameraPreview->getWidth() * scale_factor / 2,
+                              getWindowHeight()/2 - this->cameraPreview->getHeight() * scale_factor / 2,
+                              getWindowWidth()/2 + this->cameraPreview->getWidth() * scale_factor / 2,
+                              getWindowHeight()/2 + this->cameraPreview->getHeight() * scale_factor / 2);
+//        Rectf cameraRect(getWindowWidth()/2 + this->cameraPreview->getWidth() * scale_factor / 2,
+//                         getWindowHeight()/2 + this->cameraPreview->getHeight() * scale_factor / 2,
+//                         getWindowWidth()/2 - this->cameraPreview->getWidth() * scale_factor / 2,
+//                         getWindowHeight()/2 - this->cameraPreview->getHeight() * scale_factor / 2);
+        gl::draw(this->cameraPreview, cameraRect);
     }
     
     if(this->camera.isRecording()) {
@@ -399,13 +455,18 @@ void ConfettiVisionApp::drawReview() {
 void ConfettiVisionApp::drawPlayback() {
     
 
-    float topPaneHeight = getWindowHeight()*0.75;
+    //float topPaneHeight = getWindowHeight()*0.75;
+    float topPaneHeight = getWindowHeight() * this->topPanePercent;
+    if(!this->drawMusicGraphics)
+        topPaneHeight = getWindowHeight();
 
     // Draw the per-color preview channels
-    gl::pushMatrices();
-        gl::translate(0, topPaneHeight);
-        this->balloon->drawMusicGraphics(getWindowWidth(), getWindowHeight()  - topPaneHeight);
-    gl::popMatrices();
+    if(this->drawMusicGraphics) {
+        gl::pushMatrices();
+            gl::translate(0, topPaneHeight);
+            this->balloon->drawMusicGraphics(getWindowWidth(), getWindowHeight()  - topPaneHeight);
+        gl::popMatrices();
+    }
     
     
     // Draw the top info pane
@@ -433,13 +494,34 @@ void ConfettiVisionApp::drawPlayback() {
     float channel_w = channel_h * video_w / video_h;
     float channel_padding_x = (channel_pane_w - channel_w) / 4.0f;
     
+    // FOUR UP SCALE CALCULATIONS
+    if(this->fourUpChannels) {
+        videoPadding = 0.02 * topPaneHeight;
+        scale_factor = ((getWindowWidth() / 2) - (videoPadding * 2)) / videoSize.x;
+        video_w = videoSize.x * scale_factor;
+        video_h = videoSize.y * scale_factor;
+        channel_pane_w = (getWindowWidth() / 2);
+        channel_pane_h = topPaneHeight - progressBarHeight;
+        channel_padding_x = channel_pane_w / 32.0f;
+        channel_w = (channel_pane_w - (channel_padding_x * 3)) / 2.0f;
+        channel_h = channel_w * video_h / video_w;
+        channel_padding_y = channel_padding_x;
+    }
+    
     
     if(sourceVid) {
         gl::color(COLOR_DARKGREY);
         float leftShift = 0;
         if(this->paramCalibrate)
             leftShift = video_w/2;
-        Rectf videoRect = Rectf(getWindowWidth() / 2 - video_w/2 + leftShift, videoPadding, getWindowWidth() / 2 + video_w/2 + leftShift, videoPadding + video_h);
+        Rectf videoRect = Rectf(getWindowWidth() / 2 - video_w/2 + leftShift, videoPadding,
+                                getWindowWidth() / 2 + video_w/2 + leftShift, videoPadding + video_h);
+        if(this->fourUpChannels) {
+            videoRect = Rectf(getWindowWidth() * 0.75 - video_w / 2, topPaneHeight / 2 - video_h / 2,
+                              getWindowWidth() * 0.75 + video_w / 2, topPaneHeight / 2 + video_h / 2);
+        }
+//        Rectf videoRect = Rectf(getWindowWidth() / 2 + video_w/2 + leftShift, videoPadding + video_h,
+//                                getWindowWidth() / 2 - video_w/2 + leftShift, videoPadding + 0);
         gl::drawSolidRect(videoRect.inflated(Vec2f(video_w * 0.01f, video_w * 0.01f)));
         gl::color(COLOR_WHITE);
         gl::draw(sourceVid, videoRect);
@@ -486,14 +568,9 @@ void ConfettiVisionApp::drawPlayback() {
     {
         gl::pushMatrices();
         {
-            float red_scale = 1.0f;
-            float yellow_scale = 1.0f;
-            float green_scale = 1.0f;
-            float blue_scale = 1.0f;
-            
             ParticleColor colors [4] = {ParticleColor::RED, ParticleColor::YELLOW, ParticleColor::GREEN, ParticleColor::BLUE};
             ParticleColor calibrationColor = colors[this->currentCalibrationColor % 4];
-            gl::translate(channel_padding_x, channel_padding_y + progressBarHeight);
+            
             
             if(this->paramCalibrate) {
                 switch(calibrationColor) {
@@ -510,13 +587,47 @@ void ConfettiVisionApp::drawPlayback() {
                         gl::color(COLOR_BLUE);
                         break;
                 }
-                
-                gl::drawSolidRect(Rectf(-channel_w*4*.02, -channel_h*4*.02, channel_w *4* 1.02,channel_h *4* 1.02));
+                float scale = this->fourUpChannels ? 2 : 4;
+                gl::pushMatrices();
+                gl::translate(channel_padding_x, channel_padding_y + progressBarHeight);
+                gl::drawSolidRect(Rectf(-channel_w*scale*.02, -channel_h*scale*.02, channel_w *scale* 1.02,channel_h *scale* 1.02));
                 
                 gl::color(COLOR_WHITE);
                 this->balloon->drawChannelGraph(calibrationColor, channel_w*4, channel_h*4);
+                gl::popMatrices();
+            }
+            else if(this->fourUpChannels) {
+                gl::pushMatrices();
+                {
+                    gl::translate(getWindowWidth() * 0.25 - channel_w - channel_padding_x/2,
+                                  topPaneHeight / 2 - channel_h - channel_padding_y/2);
+                    this->balloon->drawChannelGraph(ParticleColor::RED, channel_w, channel_h);
+                }
+                gl::popMatrices();
+                gl::pushMatrices();
+                {
+                    gl::translate(getWindowWidth() * 0.25 + channel_padding_x/2,
+                                  topPaneHeight / 2 - channel_h - channel_padding_y/2);
+                    this->balloon->drawChannelGraph(ParticleColor::YELLOW, channel_w, channel_h);
+                }
+                gl::popMatrices();
+                gl::pushMatrices();
+                {
+                    gl::translate(getWindowWidth() * 0.25 - channel_w - channel_padding_x/2,
+                                  topPaneHeight / 2 + channel_padding_y/2);
+                    this->balloon->drawChannelGraph(ParticleColor::GREEN, channel_w, channel_h);
+                }
+                gl::popMatrices();
+                gl::pushMatrices();
+                {
+                    gl::translate(getWindowWidth() * 0.25 + channel_padding_x/2,
+                                  topPaneHeight / 2 + channel_padding_y/2);
+                    this->balloon->drawChannelGraph(ParticleColor::BLUE, channel_w, channel_h);
+                }
+                gl::popMatrices();
             }
             else {
+                gl::translate(channel_padding_x, channel_padding_y + progressBarHeight);
                 this->balloon->drawChannelGraph(ParticleColor::RED, channel_w, channel_h);
                 gl::translate(0, channel_h + channel_padding_y);
                 this->balloon->drawChannelGraph(ParticleColor::YELLOW, channel_w, channel_h);
@@ -611,6 +722,12 @@ void ConfettiVisionApp::setupParams() {
     params->addParam("Calibrate", &paramCalibrate).updateFn([this] { this->setCalibrate(paramCalibrate);  });
     params->addSeparator();
     
+    params->addParam("Top Pane %", &this->topPanePercent).min(0.01).max(1.0).step(0.01);
+    params->addParam("Music Graphics", &this->drawMusicGraphics);
+    params->addParam("4UP", &this->fourUpChannels);
+    
+    params->addSeparator();
+    
     config->newNode("Camera settings");
     config->addParam("Camera Exposure", &paramExposure).updateFn([this] { this->camera.setExposure(this->paramExposure); } ).min(500).max(500000);
     config->addParam("Camera Gain", &paramGain).updateFn([this] { this->camera.setGain(this->paramGain); } ).min(-10).max(10).step(0.1f);
@@ -646,9 +763,9 @@ void ConfettiVisionApp::setupParams() {
                                                    [this]() { return paramWB_b; });
     
     
-    params->addButton("Trigger START", [this]() { this->camera.startTrigger(); } );
-    params->addButton("Trigger STOP", [this]() { this->camera.stopTrigger(); } );
-    params->addButton("Save Buffer", [this]() { this->camera.saveBuffer("~/Desktop/out.mpg"); } );
+    params->addButton("TRIGGER & SAVE", [this]() { this->triggerAndCreateBalloon(); } );
+    //params->addButton("Trigger STOP", [this]() { this->camera.stopTrigger(); } );
+    //params->addButton("Save Buffer", [this]() { this->camera.saveBuffer("~/Desktop/out.mpg"); } );
     params->addSeparator();
     
     config->newNode("Color thresholds");

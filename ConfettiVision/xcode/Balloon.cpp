@@ -104,7 +104,8 @@ void Balloon::update() {
     if(largestBlob >= this->poppedEndThreshold) {
         this->seenABalloon = true;
     }
-    if(largestBlob < this->poppedStartThreshold && !this->poppedYet && this->seenABalloon) {
+    //if(largestBlob < this->poppedStartThreshold && !this->poppedYet && this->seenABalloon) {
+    if(largestBlob < this->largestBalloonSize * 0.55 && !this->poppedYet && this->seenABalloon) {
         // The balloon has popped!
         this->setUniversalConstants();
         // TODO: Send different bangs based on the size of the balloon

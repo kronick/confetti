@@ -61,8 +61,8 @@ class ParticleCollection {
   public:
     ColorThreshold          threshold;
     ParticleColor           color;
-    int                     particleAreaMin = 20;
-    int                     particleAreaMax = 1200;
+    int                     particleAreaMin = 40;   // 20
+    int                     particleAreaMax = 3000; // 1200
     float                   particleSeparationThreshold = 1000;
     int                     largestParticleArea;
     

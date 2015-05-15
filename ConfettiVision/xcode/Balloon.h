@@ -94,8 +94,8 @@ class Balloon {
     bool        poppedYet = false;
     bool        seenABalloon = false;
     int         poppedFrame = -1;
-    int         poppedStartThreshold = 3000;
-    int         poppedEndThreshold = 7000;
+    int         poppedStartThreshold = 3000; //3000
+    int         poppedEndThreshold = 7000; // 7000
     int         largestBalloonSize = 0;
     int         ID;
     
